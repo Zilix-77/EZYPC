@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EZYPC - Calm PC Buying</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              // Light theme (default)
+              base: '#f5f5f5',
+              surface: '#ffffff',
+              'on-surface': '#121212',
+              'on-surface-secondary': '#6b7280',
+
+              // Dark theme colors
+              'dark-base': '#1a1a1a',
+              'dark-surface': '#242424',
+              'dark-on-surface': '#f0f0f0',
+              'dark-on-surface-secondary': '#a8a8a8',
+
+              // Accent colors
+              primary: '#c89b7b',
+              'primary-hover': '#b48a6b',
+              accent: '#8daaa1',
+              success: '#22c55e',
+              'success-hover': '#16a34a',
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            keyframes: {
+              'fade-in': {
+                '0%': { opacity: '0', transform: 'translateY(10px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              'fade-in-down': {
+                '0%': { opacity: '0', transform: 'translateY(-10px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+            },
+            animation: {
+              'fade-in': 'fade-in 0.5s ease-out forwards',
+              'fade-in-down': 'fade-in-down 0.5s ease-out forwards',
+            },
+            backdropBlur: {
+              'xl': '24px',
+            },
+          },
+        },
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "recharts": "https://esm.sh/recharts@^3.7.0",
+    "framer-motion": "https://esm.sh/framer-motion@^12.29.2"
+  }
+}
+</script>
+</head>
+  <body class="bg-base text-on-surface dark:bg-dark-base dark:text-dark-on-surface font-sans">
+    <div id="root"></div>
+  </body>
+</html>
