@@ -137,25 +137,29 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product, onBack, 
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-        <div className="rounded-xl overflow-hidden aspect-video">
-          <LazyImage src={imageUrl} alt={title} className="w-full h-full" />
+        <div>
+          <div className="rounded-xl overflow-hidden aspect-video">
+            <LazyImage src={imageUrl} alt={title} className="w-full h-full" />
+          </div>
+          {reviews && reviews.length > 0 && (
+            <div className="mt-4 flex items-center gap-4">
+              <p className="text-4xl font-bold text-on-surface dark:text-dark-on-surface">{averageRating.toFixed(1)}</p>
+              <div>
+                <StarRating rating={averageRating} className="h-6 w-6" />
+                <p className="text-sm text-on-surface-secondary dark:text-dark-on-surface-secondary mt-1">{reviews.length} reviews</p>
+              </div>
+            </div>
+          )}
         </div>
         <div className="flex flex-col">
           <span className="text-md text-on-surface-secondary dark:text-dark-on-surface-secondary font-medium mb-2">{type}</span>
           <h1 className="text-3xl lg:text-4xl font-bold text-on-surface dark:text-dark-on-surface mb-3">{title}</h1>
           <p className="text-on-surface-secondary dark:text-dark-on-surface-secondary mb-6 text-lg">{rationale}</p>
           
-          <div className="mt-auto flex flex-col sm:flex-row sm:items-end sm:gap-6 pt-6">
-              {reviews && reviews.length > 0 && (
-                <div className="flex-shrink-0 mb-6 sm:mb-0 text-center sm:text-left">
-                    <p className="text-4xl font-bold text-on-surface dark:text-dark-on-surface">{averageRating.toFixed(1)}</p>
-                    <StarRating rating={averageRating} className="h-6 w-6 mx-auto sm:mx-0" />
-                    <p className="text-sm text-on-surface-secondary dark:text-dark-on-surface-secondary mt-1">{reviews.length} reviews</p>
-                </div>
-              )}
+          <div className="mt-auto pt-6">
               <div className="flex-grow bg-surface dark:bg-dark-surface border border-on-surface/10 dark:border-dark-on-surface/10 rounded-xl p-4">
                   <p className="text-sm text-on-surface-secondary dark:text-dark-on-surface-secondary mb-3">Starting from</p>
-                  <p className="text-3xl font-bold text-primary text-left mb-4">{formattedPrice}</p>
+                  <p className="text-3xl font-bold text-primary dark:text-dark-primary text-left mb-4">{formattedPrice}</p>
                   <div className="space-y-3">
                       {sortedPurchaseOptions.map((option, index) => (
                           <a
@@ -163,8 +167,8 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product, onBack, 
                               href={option.link}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className={`w-full flex justify-between items-center text-center text-black font-semibold py-3 px-4 rounded-lg transition-colors duration-200 text-base
-                                  ${index === 0 ? 'bg-success hover:bg-success-hover' : 'bg-primary hover:bg-primary-hover'}`
+                              className={`w-full flex justify-between items-center text-center font-semibold py-3 px-4 rounded-lg transition-colors duration-200 text-base
+                                  ${index === 0 ? 'bg-success hover:bg-success-hover text-black' : 'bg-primary hover:bg-primary-hover dark:bg-dark-primary dark:hover:bg-dark-primary-hover text-white'}`
                               }
                           >
                               <span>Buy on {option.vendor}</span>

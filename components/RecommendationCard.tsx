@@ -56,9 +56,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetails }) => 
                   {tag}
                 </div>
               )}
-               {!isBestMatch && (
-                <div className="bg-primary/20 text-primary text-xs font-bold inline-block py-1 px-2 rounded-full">
-                  Good Value
+               {isBestMatch && (
+                <div className="bg-primary/20 text-primary dark:bg-dark-primary/20 dark:text-dark-primary text-xs font-bold inline-block py-1 px-2 rounded-full">
+                  Best Match
                 </div>
               )}
             </div>
@@ -78,10 +78,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetails }) => 
       </div>
       
       <div className="px-6 pb-6">
-        <p className="text-2xl font-bold text-primary text-right mb-4">{formattedPrice}</p>
+        <p className="text-2xl font-bold text-primary dark:text-dark-primary text-right mb-4">{formattedPrice}</p>
         <button
           onClick={onViewDetails}
-          className="w-full block text-center bg-primary text-black font-semibold py-3 px-6 rounded-lg hover:bg-primary-hover transition-colors duration-200"
+          className="w-full block text-center bg-primary text-white font-semibold py-3 px-6 rounded-lg hover:bg-primary-hover dark:bg-dark-primary dark:hover:bg-dark-primary-hover transition-colors duration-200"
         >
           View Details
         </button>

@@ -29,7 +29,7 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ reviews }) => {
             <h2 className="text-2xl font-bold text-on-surface dark:text-dark-on-surface mb-6">Reviews & Ratings</h2>
             <div className="bg-surface dark:bg-dark-surface border border-on-surface/10 dark:border-dark-on-surface/10 rounded-xl p-6 mb-6 flex flex-col sm:flex-row items-center gap-4">
                 <div className="text-center">
-                    <p className="text-5xl font-bold text-primary">{averageRating.toFixed(1)}</p>
+                    <p className="text-5xl font-bold text-primary dark:text-dark-primary">{averageRating.toFixed(1)}</p>
                     <p className="text-on-surface-secondary dark:text-dark-on-surface-secondary">out of 5</p>
                 </div>
                 <div className="sm:ml-4">

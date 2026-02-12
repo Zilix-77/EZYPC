@@ -80,7 +80,7 @@ const RecommendationWizard: React.FC<RecommendationWizardProps> = ({ isOpen, onC
                         <p className="text-center text-on-surface-secondary dark:text-dark-on-surface-secondary mb-8">This helps us narrow down the options for you.</p>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             {useCases.map(({ id, label, icon }) => (
-                                <button key={id} onClick={() => handleStart(id)} className="group bg-surface/50 dark:bg-dark-surface/50 p-6 rounded-xl border border-on-surface/10 dark:border-dark-on-surface/10 hover:border-primary transition-colors flex flex-col items-center justify-center text-on-surface-secondary dark:text-dark-on-surface-secondary hover:text-primary">
+                                <button key={id} onClick={() => handleStart(id)} className="group bg-surface/50 dark:bg-dark-surface/50 p-6 rounded-xl border border-on-surface/10 dark:border-dark-on-surface/10 hover:border-primary dark:hover:border-dark-primary transition-colors flex flex-col items-center justify-center text-on-surface-secondary dark:text-dark-on-surface-secondary hover:text-primary dark:hover:text-dark-primary">
                                     {icon}
                                     <span className="text-lg font-semibold text-on-surface dark:text-dark-on-surface">{label}</span>
                                 </button>
@@ -95,12 +95,12 @@ const RecommendationWizard: React.FC<RecommendationWizardProps> = ({ isOpen, onC
                  return (
                     <div>
                         <div className="w-full bg-surface/50 dark:bg-dark-surface/50 rounded-full h-2 mb-6">
-                            <div className="bg-primary h-2 rounded-full transition-all duration-300" style={{ width: `${progress * 100}%` }}></div>
+                            <div className="bg-primary dark:bg-dark-primary h-2 rounded-full transition-all duration-300" style={{ width: `${progress * 100}%` }}></div>
                         </div>
                         <h2 className="text-2xl font-semibold text-on-surface dark:text-dark-on-surface text-center mb-6">{questions[currentQuestionIndex].question}</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {questions[currentQuestionIndex].options.map(option => (
-                                <button key={option} onClick={() => handleAnswer(option)} className="bg-surface/50 dark:bg-dark-surface/50 text-on-surface dark:text-dark-on-surface p-4 rounded-lg border border-on-surface/10 dark:border-dark-on-surface/10 hover:border-primary transition-colors text-left">
+                                <button key={option} onClick={() => handleAnswer(option)} className="bg-surface/50 dark:bg-dark-surface/50 text-on-surface dark:text-dark-on-surface p-4 rounded-lg border border-on-surface/10 dark:border-dark-on-surface/10 hover:border-primary dark:hover:border-dark-primary transition-colors text-left">
                                     {option}
                                 </button>
                             ))}
@@ -119,7 +119,7 @@ const RecommendationWizard: React.FC<RecommendationWizardProps> = ({ isOpen, onC
                     <div className="flex flex-col items-center justify-center text-center p-8">
                         <h2 className="text-xl font-semibold text-red-400">Something went wrong</h2>
                         <p className="text-on-surface-secondary dark:text-dark-on-surface-secondary mt-2 max-w-sm">{error}</p>
-                        <button onClick={resetAndClose} className="mt-6 bg-primary text-base font-semibold py-2 px-6 rounded-lg">
+                        <button onClick={resetAndClose} className="mt-6 bg-primary dark:bg-dark-primary text-white font-semibold py-2 px-6 rounded-lg">
                             Close
                         </button>
                     </div>

@@ -1,12 +1,19 @@
-
 import { GoogleGenAI, Type } from '@google/genai';
 import { UseCase, Answer, Product } from '../types';
 
-if (!process.env.API_KEY) {
-  console.warn("API_KEY environment variable not set. Please set it to use the Gemini API.");
-}
+let aiInstance: GoogleGenAI | null = null;
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+const getAiClient = (): GoogleGenAI => {
+    if (!aiInstance) {
+        const apiKey = process.env.API_KEY;
+        if (!apiKey) {
+            // This will be caught by the calling functions and displayed as a friendly error
+            throw new Error("API_KEY environment variable not set. Please set it to use the Gemini API.");
+        }
+        aiInstance = new GoogleGenAI({ apiKey });
+    }
+    return aiInstance;
+};
 
 const productSchema = {
   type: Type.OBJECT,
@@ -130,6 +137,7 @@ export const getPopularProducts = async (): Promise<{ recommendations: Product[]
   `;
 
   try {
+    const ai = getAiClient();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,
@@ -193,6 +201,7 @@ export const getPCRecommendation = async (
   const prompt = buildRecommendationPrompt(useCase, answers);
   
   try {
+    const ai = getAiClient();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,
@@ -244,6 +253,7 @@ export const getSimilarProducts = async (product: Product, excludeTitles: string
     `;
     
     try {
+        const ai = getAiClient();
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: prompt,

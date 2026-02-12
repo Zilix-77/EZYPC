@@ -21,7 +21,7 @@ const ProductCardSkeleton: React.FC = () => {
         <div className="flex justify-end items-center mb-4">
             <div className="h-8 bg-on-surface/5 dark:bg-dark-on-surface/5 rounded w-1/3"></div>
         </div>
-        <div className="h-12 bg-primary/20 rounded-lg w-full"></div>
+        <div className="h-12 bg-primary/20 dark:bg-dark-primary/20 rounded-lg w-full"></div>
       </div>
     </div>
   );

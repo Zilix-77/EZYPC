@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { PriceHistoryData } from '../types';
+import { useTheme } from '../hooks/useTheme';
 
 interface PriceHistoryChartProps {
   basePrice: number;
@@ -40,6 +41,7 @@ const CustomTooltip: React.FC<any> = ({ active, payload, label }) => {
 
 
 const PriceHistoryChart: React.FC<PriceHistoryChartProps> = ({ basePrice }) => {
+  const { theme } = useTheme();
   const data = useMemo(() => generatePriceHistory(basePrice), [basePrice]);
   
   return (
@@ -61,7 +63,7 @@ const PriceHistoryChart: React.FC<PriceHistoryChartProps> = ({ basePrice }) => {
                 <XAxis dataKey="month" stroke="currentColor" className="text-on-surface-secondary dark:text-dark-on-surface-secondary" />
                 <YAxis stroke="currentColor" className="text-on-surface-secondary dark:text-dark-on-surface-secondary" tickFormatter={(value) => `₹${Number(value/1000).toFixed(0)}k`} />
                 <Tooltip content={<CustomTooltip />} />
-                <Line type="monotone" dataKey="price" stroke="#c89b7b" strokeWidth={2} activeDot={{ r: 8 }} />
+                <Line type="monotone" dataKey="price" stroke={theme === 'dark' ? '#c89b7b' : '#738ea1'} strokeWidth={2} activeDot={{ r: 8 }} />
                 </LineChart>
             </ResponsiveContainer>
         </div>

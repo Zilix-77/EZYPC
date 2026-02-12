@@ -2,40 +2,58 @@ import React from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const SunIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2" />
+    <path d="M12 20v2" />
+    <path d="m4.93 4.93 1.41 1.41" />
+    <path d="m17.66 17.66 1.41 1.41" />
+    <path d="M2 12h2" />
+    <path d="M20 12h2" />
+    <path d="m6.34 17.66-1.41 1.41" />
+    <path d="m19.07 4.93-1.41 1.41" />
+  </svg>
+);
+
+const MoonIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+  </svg>
+);
+
 const ThemeToggle: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
 
   return (
     <button
       onClick={toggleTheme}
-      className="relative w-10 h-10 flex items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-base dark:focus:ring-offset-dark-base transition-all"
+      className="relative w-10 h-10 flex items-center justify-center rounded-full bg-surface dark:bg-dark-surface border border-on-surface/10 dark:border-dark-on-surface/10 focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-dark-primary focus:ring-offset-2 focus:ring-offset-base dark:focus:ring-offset-dark-base transition-colors"
       aria-label="Toggle theme"
     >
-      {/* Background glow effect for dark mode */}
-      <div className={`absolute -inset-1 rounded-full transition-all duration-500 ${theme === 'dark' ? 'bg-primary/20 blur-lg' : 'bg-transparent'}`}></div>
-
-      {/* SVG Icon */}
-      <svg className="w-6 h-6 z-10 text-on-surface-secondary dark:text-dark-on-surface-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        {/* The static outer ring of the power button */}
-        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" className="opacity-20" />
-        
-        {/* The static power line */}
-        <path d="M12 7v5" />
-        
-        {/* Animated glowing ring for dark mode */}
-        <AnimatePresence>
-          {theme === 'dark' && (
-            <motion.path
-              d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"
-              stroke="#c89b7b"
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: 1 }}
-              exit={{ pathLength: 0, opacity: 0 }}
-              transition={{ duration: 0.5 }}
-            />
-          )}
-        </AnimatePresence>
-      </svg>
+      <AnimatePresence mode="wait" initial={false}>
+        {theme === 'dark' ? (
+          <motion.div
+            key="sun"
+            initial={{ scale: 0.5, opacity: 0, rotate: -90 }}
+            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+            exit={{ scale: 0.5, opacity: 0, rotate: 90 }}
+            transition={{ duration: 0.3, type: 'spring', stiffness: 200, damping: 20 }}
+          >
+            <SunIcon className="w-6 h-6 text-yellow-400" />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="moon"
+            initial={{ scale: 0.5, opacity: 0, rotate: 90 }}
+            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+            exit={{ scale: 0.5, opacity: 0, rotate: -90 }}
+            transition={{ duration: 0.3, type: 'spring', stiffness: 200, damping: 20 }}
+          >
+            <MoonIcon className="w-6 h-6 text-on-surface-secondary" />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </button>
   );
 };

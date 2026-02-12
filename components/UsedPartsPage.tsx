@@ -3,6 +3,7 @@ import { usedPartsData } from '../data/usedPartsData';
 import { UsedPart } from '../types';
 // FIX: Import Variants type from framer-motion to resolve type error.
 import { motion, Variants } from 'framer-motion';
+import LazyImage from './LazyImage';
 
 const gradeMapping = {
     A: { label: 'Grade A', description: 'Like new condition', color: 'bg-green-500/20 text-green-400' },
@@ -40,7 +41,7 @@ const UsedPartCard: React.FC<{ part: UsedPart }> = ({ part }) => {
           className="bg-surface dark:bg-dark-surface rounded-xl border border-on-surface/10 dark:border-dark-on-surface/10 flex flex-col h-full overflow-hidden group transition-all duration-300 hover:border-on-surface/20 dark:hover:border-dark-on-surface/20 hover:scale-[1.03] hover:shadow-2xl shadow-black/5"
         >
             <div className="aspect-video w-full">
-                <img src={part.imageUrl} alt={part.component} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" loading="lazy" decoding="async" />
+                <LazyImage src={part.imageUrl} alt={part.component} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
             </div>
             <div className="p-5 flex flex-col flex-grow">
                 <div className="flex justify-between items-start mb-2">
@@ -52,7 +53,7 @@ const UsedPartCard: React.FC<{ part: UsedPart }> = ({ part }) => {
                 <h3 className="text-lg font-bold text-on-surface dark:text-dark-on-surface mb-2 flex-grow">{part.component}</h3>
                 <p className="text-sm text-on-surface-secondary dark:text-dark-on-surface-secondary mb-4">{part.details}</p>
                 <div className="mt-auto">
-                    <p className="text-2xl font-bold text-primary text-right mb-4">{formattedPrice}</p>
+                    <p className="text-2xl font-bold text-primary dark:text-dark-primary text-right mb-4">{formattedPrice}</p>
                     <button className="w-full block text-center bg-accent text-black font-semibold py-3 px-6 rounded-lg hover:bg-opacity-80 transition-colors duration-200">
                         Inquire in Store
                     </button>
@@ -82,7 +83,7 @@ const UsedPartsPage: React.FC = () => {
         <div className="text-center mt-12 border-t border-on-surface/10 dark:border-dark-on-surface/10 pt-8">
              <h2 className="text-2xl font-bold text-on-surface dark:text-dark-on-surface">Have Parts to Sell?</h2>
              <p className="mt-2 text-on-surface-secondary dark:text-dark-on-surface-secondary">Visit our store for a quote on our trade-in program.</p>
-            <button className="mt-6 bg-primary text-black font-semibold py-3 px-8 rounded-lg hover:bg-primary-hover transition-colors duration-200">
+            <button className="mt-6 bg-primary text-white font-semibold py-3 px-8 rounded-lg hover:bg-primary-hover dark:bg-dark-primary dark:hover:bg-dark-primary-hover transition-colors duration-200">
                 Learn About Trade-Ins
             </button>
         </div>

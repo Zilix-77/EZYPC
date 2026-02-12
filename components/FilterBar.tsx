@@ -16,8 +16,8 @@ const FilterBar: React.FC<FilterBarProps> = ({ activeFilter, onFilterChange, fil
                     onClick={() => onFilterChange(filter)}
                     className={`px-4 py-2 text-sm sm:text-base font-semibold rounded-lg transition-colors duration-200 ${
                         activeFilter === filter 
-                        ? 'bg-primary text-black' 
-                        : 'text-on-surface/70 dark:text-dark-on-surface/70 hover:text-on-surface dark:hover:text-dark-on-surface hover:bg-black/5 dark:hover:bg-white/5'
+                        ? 'bg-primary dark:bg-dark-primary text-white' 
+                        : 'text-on-surface-secondary dark:text-dark-on-surface-secondary hover:text-on-surface dark:hover:text-dark-on-surface hover:bg-black/5 dark:hover:bg-white/5'
                     }`}
                 >
                     {filter}

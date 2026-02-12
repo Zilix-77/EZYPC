@@ -22,11 +22,12 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
   const [isIntroComplete, setIntroComplete] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const timer = setTimeout(() => {
         setIntroComplete(true);
-    }, 1200);
+    }, 2000); // Increased duration for the new animation
     return () => clearTimeout(timer);
   }, []);
 
@@ -67,6 +68,10 @@ const App: React.FC = () => {
     if (newPage === Page.STORE) {
         setSelectedProduct(null);
     }
+    // Clear search when navigating away from the store
+    if (page === Page.STORE && newPage !== Page.STORE) {
+        setSearchQuery('');
+    }
     setPage(newPage);
     window.scrollTo(0,0);
   };
@@ -101,7 +106,7 @@ const App: React.FC = () => {
             <p className="text-on-surface-secondary dark:text-dark-on-surface-secondary mt-2 max-w-md">{error}</p>
             <button
               onClick={fetchInitialProducts}
-              className="mt-8 bg-primary text-white font-semibold py-2 px-6 rounded-lg hover:bg-primary-hover transition-colors duration-200"
+              className="mt-8 bg-primary text-white font-semibold py-2 px-6 rounded-lg hover:bg-primary-hover dark:bg-dark-primary dark:hover:bg-dark-primary-hover transition-colors duration-200"
             >
               Try Again
             </button>
@@ -113,13 +118,13 @@ const App: React.FC = () => {
 
     switch (page) {
       case Page.STORE:
-        return <StorePage products={products} onStartWizard={() => setIsWizardOpen(true)} onViewDetails={handleViewDetails} isLoading={showSkeleton} />;
+        return <StorePage products={products} onStartWizard={() => setIsWizardOpen(true)} onViewDetails={handleViewDetails} isLoading={showSkeleton} searchQuery={searchQuery} onSearchChange={setSearchQuery} />;
       case Page.USED_PARTS:
         return <UsedPartsPage />;
       case Page.DETAIL:
-        return selectedProduct ? <ProductDetailPage product={selectedProduct} onBack={handleBackToStore} onViewDetails={handleViewDetails} onNavigate={handleNavigate} /> : <StorePage products={products} onStartWizard={() => setIsWizardOpen(true)} onViewDetails={handleViewDetails} isLoading={showSkeleton} />;
+        return selectedProduct ? <ProductDetailPage product={selectedProduct} onBack={handleBackToStore} onViewDetails={handleViewDetails} onNavigate={handleNavigate} /> : <StorePage products={products} onStartWizard={() => setIsWizardOpen(true)} onViewDetails={handleViewDetails} isLoading={showSkeleton} searchQuery={searchQuery} onSearchChange={setSearchQuery} />;
       default:
-        return <StorePage products={products} onStartWizard={() => setIsWizardOpen(true)} onViewDetails={handleViewDetails} isLoading={showSkeleton} />;
+        return <StorePage products={products} onStartWizard={() => setIsWizardOpen(true)} onViewDetails={handleViewDetails} isLoading={showSkeleton} searchQuery={searchQuery} onSearchChange={setSearchQuery} />;
     }
   };
 
@@ -128,9 +133,9 @@ const App: React.FC = () => {
       <AnimatePresence>
         {!isIntroComplete && <IntroAnimation />}
       </AnimatePresence>
-      <div className={`min-h-screen bg-base dark:bg-dark-base flex flex-col items-center p-4 sm:p-6 transition-opacity duration-200 ${isIntroComplete ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`min-h-screen flex flex-col items-center p-4 sm:p-6 transition-opacity duration-500 ${isIntroComplete ? 'opacity-100' : 'opacity-0'}`}>
         <div className="w-full max-w-7xl mx-auto flex flex-col z-10">
-          <Header onNavigate={handleNavigate} currentPage={page} />
+          <Header onNavigate={handleNavigate} currentPage={page} onSearch={setSearchQuery} searchQuery={searchQuery} />
           <main className="flex-grow flex items-start justify-center mt-6">
             <Suspense fallback={<div className="flex-grow flex items-center justify-center h-[50vh]"><LoadingSpinner /></div>}>
               {renderContent()}
