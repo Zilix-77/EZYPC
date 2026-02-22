@@ -5,7 +5,7 @@ const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 // 🔹 Call backend API
 const callGeminiAPI = async (prompt: string) => {
-  const response = await fetch("/api/gemini", {
+  const response = await fetch("/api/ai", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
