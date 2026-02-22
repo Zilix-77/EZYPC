@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { UseCase, Question, Answer, Product } from '../types';
 import { QUESTIONS } from '../constants';
-import { getPCRecommendation } from '../services/geminiService';
+import { getPCRecommendation } from '../services/aiService';
 import LoadingSpinner from './LoadingSpinner';
 
 interface RecommendationWizardProps {

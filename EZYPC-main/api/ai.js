@@ -17,15 +17,22 @@ export default async function handler(req, res) {
       apiKey: process.env.HF_TOKEN,
     });
 
-    const chatCompletion = await client.chat.completions.create({
+    const completion = await client.chat.completions.create({
       model: "meta-llama/Meta-Llama-3-8B-Instruct:novita",
       messages: [
-        { role: "user", content: prompt }
+        {
+          role: "system",
+          content: "You are a professional PC building assistant. Always return ONLY valid JSON. No markdown. No explanations."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
       ],
-      temperature: 0.7,
+      temperature: 0.7
     });
 
-    const text = chatCompletion.choices[0].message.content;
+    const text = completion.choices[0].message.content;
 
     return res.status(200).json({ result: text });
 

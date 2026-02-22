@@ -2,7 +2,7 @@ import React, { useMemo, useEffect, useState, useCallback, useRef } from 'react'
 import { Product, UsedPart, Page } from '../types';
 import LazyImage from './LazyImage';
 import PriceHistoryChart from './PriceHistoryChart';
-import { getSimilarProducts } from '../services/geminiService';
+import { getSimilarProducts } from '../services/aiService';
 import ProductCard from './RecommendationCard';
 import ProductCardSkeleton from './ProductCardSkeleton';
 import ReviewsSection from './ReviewsSection';

@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { Page, Product } from './types';
 import Header from './components/Header';
-import { getPopularProducts } from './services/geminiService';
+import { getPopularProducts } from './services/aiService';
 import IntroAnimation from './components/IntroAnimation';
 import RecommendationWizard from './components/RecommendationWizard';
 import LoadingSpinner from './components/LoadingSpinner';
