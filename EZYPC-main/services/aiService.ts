@@ -46,10 +46,34 @@ const callAI = async (prompt: string) => {
     data.recommendations.length
   );
 
-  const enhanced = (data.recommendations ?? []).map((p: any) => ({
-    ...p,
-    imageUrl: `https://picsum.photos/seed/${encodeURIComponent(p.title)}/600/400`
-  }));
+  const enhanced = (data.recommendations ?? []).map((p: any) => {
+    const title = (p.title ?? '').toLowerCase();
+
+    let keyword = 'gaming pc';
+
+    if (title.includes('asus tuf')) {
+      keyword = 'asus tuf gaming laptop';
+    } else if (title.includes('asus rog')) {
+      keyword = 'asus rog gaming laptop';
+    } else if (title.includes('dell xps')) {
+      keyword = 'dell xps laptop';
+    } else if (title.includes('hp omen')) {
+      keyword = 'hp omen gaming laptop';
+    } else if (title.includes('lenovo legion')) {
+      keyword = 'lenovo legion gaming laptop';
+    } else if (p.type === 'Laptop') {
+      keyword = 'gaming laptop';
+    } else if (p.type === 'Prebuilt PC') {
+      keyword = 'gaming desktop pc tower';
+    } else if (p.type === 'Custom Build') {
+      keyword = 'rgb gaming pc build';
+    }
+
+    return {
+      ...p,
+      imageUrl: `https://source.unsplash.com/random/600x400/?${encodeURIComponent(keyword)}`
+    };
+  });
 
   return { recommendations: enhanced };
 };

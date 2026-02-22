@@ -7,22 +7,22 @@ interface LazyImageProps {
 }
 
 const LazyImage: React.FC<LazyImageProps> = ({ src, alt, className }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   return (
-    <div className={`relative w-full h-full bg-surface dark:bg-dark-surface overflow-hidden ${className}`}>
-      {/* Shimmer Placeholder */}
-      <div 
-        className={`absolute inset-0 bg-base dark:bg-dark-base animate-pulse transition-opacity duration-300 ${isLoaded ? 'opacity-0' : 'opacity-100'}`}
-      />
-      
-      {/* Actual Image */}
+    <div className={`relative w-full h-full overflow-hidden ${className ?? ''}`}>
+      {!imageLoaded && (
+        <div className="absolute inset-0 animate-pulse bg-gray-800 dark:bg-gray-800 rounded-t-xl" />
+      )}
+
       <img
         src={src}
         alt={alt}
-        className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-110 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-        onLoad={() => setIsLoaded(true)}
         loading="lazy"
+        onLoad={() => setImageLoaded(true)}
+        className={`w-full h-full min-h-[12rem] object-cover rounded-t-xl transition-opacity duration-300 group-hover:scale-110 ${
+          imageLoaded ? 'opacity-100' : 'opacity-0'
+        }`}
         decoding="async"
       />
     </div>

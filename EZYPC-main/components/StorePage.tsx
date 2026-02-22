@@ -162,7 +162,7 @@ const StorePage: React.FC<StorePageProps> = ({ products, onStartWizard, onViewDe
                 <AnimatePresence>
                     {visibleProducts.length > 0 ? (
                         visibleProducts.map((product, index) => (
-                           <ProductCard key={`${product.title}-${index}`} product={product} onViewDetails={() => onViewDetails(product)} />
+                           <ProductCard key={product.title} product={product} onViewDetails={() => onViewDetails(product)} />
                         ))
                     ) : (
                         <motion.div 

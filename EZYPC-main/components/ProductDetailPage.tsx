@@ -238,7 +238,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product, onBack, 
                 </>
             ) : (
                 similarProducts.map((p, index) => (
-                    <ProductCard key={`${p.title}-${index}`} product={p} onViewDetails={() => onViewDetails(p)} />
+                    <ProductCard key={p.title} product={p} onViewDetails={() => onViewDetails(p)} />
                 ))
             )}
         </div>
