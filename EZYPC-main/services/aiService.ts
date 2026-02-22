@@ -5,6 +5,8 @@ const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 // 🔹 Call backend API
 const callAI = async (prompt: string) => {
+  console.log('[callAI] Called with prompt:', prompt);
+
   const response = await fetch("/api/ai", {
     method: "POST",
     headers: {
@@ -13,16 +15,55 @@ const callAI = async (prompt: string) => {
     body: JSON.stringify({ prompt }),
   });
 
+  console.log('[callAI] Response status from /api/ai:', response.status);
+
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Server error");
+    let errorBody: unknown = null;
+    try {
+      errorBody = await response.json();
+    } catch {
+      // ignore JSON parse errors for logging
+    }
+    console.error('[callAI] Error response from /api/ai:', errorBody);
+    const message =
+      errorBody && typeof errorBody === 'object' && 'error' in (errorBody as any)
+        ? (errorBody as any).error
+        : 'Server error';
+    throw new Error(message);
   }
 
-  return response.json();
+  const data = await response.json();
+  console.log('[callAI] Raw data from /api/ai:', data);
+
+  if (!data || typeof data.result !== 'string') {
+    console.error('[callAI] Unexpected AI response shape:', data);
+    throw new Error('Invalid AI response from server');
+  }
+
+  let parsed: any;
+  try {
+    parsed = JSON.parse(data.result);
+  } catch (e) {
+    console.error('[callAI] Failed to parse AI JSON result:', e, data.result);
+    throw new Error('Failed to parse AI response');
+  }
+
+  const wrapped = {
+    recommendations: parsed?.recommendations ?? [],
+  };
+
+  console.log(
+    '[callAI] Parsed recommendations count:',
+    Array.isArray(wrapped.recommendations) ? wrapped.recommendations.length : 0
+  );
+
+  return wrapped;
 };
 
 // 🔹 Popular Products
 export const getPopularProducts = async (): Promise<{ recommendations: Product[] } | null> => {
+  console.log('[getPopularProducts] Invoked');
+
   const cachedData = localStorage.getItem(CACHE_KEY);
 
   if (cachedData) {
