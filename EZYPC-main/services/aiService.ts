@@ -122,15 +122,74 @@ export const getPCRecommendation = async (
     .map(a => `- ${a.question}: ${a.answer}`)
     .join('\n');
 
-  const prompt = `
-  User use case: ${useCase}
-  Answers:
-  ${answerString}
+  // Build use-case-specific requirements
+  let useCaseRequirements = '';
+  let productTypeHint = '';
 
-  Generate 2-3 structured PC recommendations in JSON format.
+  if (useCase === UseCase.GAMING) {
+    useCaseRequirements = `
+CRITICAL: These recommendations MUST be optimized for GAMING.
+- Prioritize powerful GPUs (RTX 3060 or better, or AMD RX 6600 or better)
+- Include gaming-focused components (high refresh rate monitors, gaming keyboards/mice if applicable)
+- Ensure the PC can run modern games smoothly
+- Match the budget with appropriate gaming performance tier
+- Do NOT recommend basic office PCs or laptops without dedicated GPUs`;
+    productTypeHint = 'Prefer "Prebuilt PC" or "Custom Build" types. Only recommend "Laptop" if specifically requested and it has a dedicated gaming GPU.';
+  } else if (useCase === UseCase.STUDENT) {
+    useCaseRequirements = `
+CRITICAL: These recommendations MUST be optimized for STUDENT USE.
+- Prioritize portability and battery life (laptops preferred)
+- Include components suitable for studying, coding, and academic work
+- Ensure good display quality for reading and research
+- Match the budget with student-friendly pricing
+- Do NOT recommend high-end gaming PCs unless specifically needed for engineering/CS`;
+    productTypeHint = 'Prefer "Laptop" type. Only recommend desktop PCs if portability is not important.';
+  } else if (useCase === UseCase.GENERAL) {
+    useCaseRequirements = `
+CRITICAL: These recommendations MUST be optimized for GENERAL USE.
+- Prioritize versatility and value for money
+- Include components suitable for web browsing, office work, media consumption
+- Ensure good balance between performance and price
+- Match the budget with everyday computing needs
+- Do NOT recommend specialized gaming or workstation PCs unless specifically requested`;
+    productTypeHint = 'Can be "Laptop", "Prebuilt PC", or "Custom Build" depending on form factor preference.';
+  }
+
+  const prompt = `
+You are recommending PCs for a user with the following requirements:
+
+USE CASE: ${useCase}
+${useCaseRequirements}
+
+USER PREFERENCES:
+${answerString}
+
+${productTypeHint}
+
+IMPORTANT RULES:
+1. Generate EXACTLY 2-3 recommendations (not more, not less)
+2. ALL recommendations MUST match the use case (${useCase})
+3. ALL recommendations MUST respect the budget and preferences provided
+4. Do NOT include generic or unrelated products
+5. Each recommendation should be tailored to the specific use case and answers
+6. Ensure components (CPU, GPU, RAM) are appropriate for the use case
+7. If use case is GAMING, ensure GPU is gaming-grade (RTX/GTX series or AMD RX series)
+8. If use case is STUDENT, prefer laptops unless desktop is explicitly preferred
+9. If use case is GENERAL, focus on versatility and value
+
+Generate structured JSON with recommendations array matching the exact schema.
   `;
 
-  return callAI(prompt);
+  const result = await callAI(prompt);
+  
+  // Safeguard: Limit to 3 recommendations max and ensure they exist
+  if (result && result.recommendations) {
+    return {
+      recommendations: result.recommendations.slice(0, 3)
+    };
+  }
+  
+  return result;
 };
 
 // 🔹 Similar Products
