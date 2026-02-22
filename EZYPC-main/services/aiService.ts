@@ -1,212 +1,248 @@
 import { UseCase, Answer, Product } from '../types';
+import { supabase } from './supabaseClient';
+import type { ComponentSpec, PurchaseOption } from '../types';
 
 const CACHE_KEY = 'popularProducts';
-const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+const CACHE_DURATION_MS = 24 * 60 * 60 * 1000;
 
+function mapRowToProduct(
+  row: {
+    id: string;
+    title: string;
+    brand?: string;
+    category: string;
+    use_case?: string;
+    description?: string;
+    rationale?: string;
+    price_min: number;
+    price_max?: number;
+    image_url?: string;
+    is_best_match?: boolean;
+  },
+  specs: { spec_name: string; spec_value: string }[],
+  prices: { vendor: string; price: number; affiliate_url: string }[]
+): Product {
+  const components: ComponentSpec[] = specs.map(s => ({
+    name: s.spec_name,
+    spec: s.spec_value,
+  }));
 
-// 🔹 Call backend API
-const callAI = async (prompt: string) => {
-  console.log('[callAI] Called with prompt:', prompt);
+  const purchaseOptions: PurchaseOption[] = prices.map(p => ({
+    vendor: p.vendor,
+    link: p.affiliate_url,
+    price: p.price,
+  }));
 
-  const response = await fetch("/api/ai", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ prompt }),
+  const lowestPrice = prices.length > 0
+    ? Math.min(...prices.map(p => p.price), row.price_min)
+    : row.price_min;
+
+  return {
+    isBestMatch: row.is_best_match ?? false,
+    type: row.category as 'Laptop' | 'Prebuilt PC' | 'Custom Build',
+    title: row.title,
+    rationale: row.rationale || row.description || '',
+    estimatedPriceINR: lowestPrice,
+    components,
+    purchaseOptions,
+    reviews: [],
+    imageUrl: row.image_url || `https://picsum.photos/seed/${row.id}/600/400`,
+  };
+}
+
+async function fetchProductWithSpecsAndPrices(productIds: string[]) {
+  if (!supabase) {
+    throw new Error('Supabase client not initialized. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+  }
+
+  const { data: products, error: productsError } = await supabase
+    .from('products')
+    .select('id, title, brand, category, use_case, description, rationale, price_min, price_max, image_url, is_best_match')
+    .in('id', productIds)
+    .eq('is_active', true);
+
+  if (productsError) throw productsError;
+  if (!products || products.length === 0) return [];
+
+  const ids = products.map(p => p.id);
+
+  const [specsRes, pricesRes] = await Promise.all([
+    supabase.from('product_specs').select('product_id, spec_name, spec_value').in('product_id', ids),
+    supabase.from('product_prices').select('product_id, vendor, price, affiliate_url').in('product_id', ids),
+  ]);
+
+  if (specsRes.error) throw specsRes.error;
+  if (pricesRes.error) throw pricesRes.error;
+
+  const specsByProduct = new Map<string, { spec_name: string; spec_value: string }[]>();
+  (specsRes.data || []).forEach(s => {
+    const list = specsByProduct.get(s.product_id) || [];
+    list.push({ spec_name: s.spec_name, spec_value: s.spec_value });
+    specsByProduct.set(s.product_id, list);
   });
 
-  console.log('[callAI] Response status from /api/ai:', response.status);
+  const pricesByProduct = new Map<string, { vendor: string; price: number; affiliate_url: string }[]>();
+  (pricesRes.data || []).forEach(p => {
+    const list = pricesByProduct.get(p.product_id) || [];
+    list.push({ vendor: p.vendor, price: p.price, affiliate_url: p.affiliate_url });
+    pricesByProduct.set(p.product_id, list);
+  });
 
-  if (!response.ok) {
-    let errorBody: unknown = null;
-    try {
-      errorBody = await response.json();
-    } catch {
-      // ignore JSON parse errors for logging
-    }
-    console.error('[callAI] Error response from /api/ai:', errorBody);
-    const message =
-      errorBody && typeof errorBody === 'object' && 'error' in (errorBody as any)
-        ? (errorBody as any).error
-        : 'Server error';
-    throw new Error(message);
-  }
-
-  const data = await response.json();
-  console.log('[callAI] Raw data from /api/ai:', data);
-
-  if (!data || !data.recommendations || !Array.isArray(data.recommendations)) {
-    console.error('[callAI] Unexpected AI response shape:', data);
-    throw new Error('Invalid AI response from server');
-  }
-
-  console.log(
-    '[callAI] Recommendations count:',
-    data.recommendations.length
+  return products.map(p =>
+    mapRowToProduct(p, specsByProduct.get(p.id) || [], pricesByProduct.get(p.id) || [])
   );
+}
 
-  const enhanced = (data.recommendations ?? []).map((p: any) => {
-    const title = (p.title ?? '').toLowerCase();
-
-    let keyword = 'gaming pc';
-
-    if (title.includes('asus tuf')) {
-      keyword = 'asus tuf gaming laptop';
-    } else if (title.includes('asus rog')) {
-      keyword = 'asus rog gaming laptop';
-    } else if (title.includes('dell xps')) {
-      keyword = 'dell xps laptop';
-    } else if (title.includes('hp omen')) {
-      keyword = 'hp omen gaming laptop';
-    } else if (title.includes('lenovo legion')) {
-      keyword = 'lenovo legion gaming laptop';
-    } else if (p.type === 'Laptop') {
-      keyword = 'gaming laptop';
-    } else if (p.type === 'Prebuilt PC') {
-      keyword = 'gaming desktop pc tower';
-    } else if (p.type === 'Custom Build') {
-      keyword = 'rgb gaming pc build';
-    }
-
-    return {
-      ...p,
-      imageUrl: `https://source.unsplash.com/random/600x400/?${encodeURIComponent(keyword)}`
-    };
-  });
-
-  return { recommendations: enhanced };
-};
-
-// 🔹 Popular Products
 export const getPopularProducts = async (): Promise<{ recommendations: Product[] } | null> => {
-  console.log('[getPopularProducts] Invoked');
-
   const cachedData = localStorage.getItem(CACHE_KEY);
 
   if (cachedData) {
-    const { timestamp, data } = JSON.parse(cachedData);
-    if (Date.now() - timestamp < CACHE_DURATION_MS) {
-      console.log("Serving from cache");
-      return data;
+    try {
+      const { timestamp, data } = JSON.parse(cachedData);
+      if (Date.now() - timestamp < CACHE_DURATION_MS) {
+        console.log('[getPopularProducts] Serving from cache');
+        return data;
+      }
+    } catch {
+      /* ignore */
     }
   }
 
-  const prompt = `
-  Generate 9 popular PC recommendations for an Indian PC store.
-  Return structured JSON with recommendations array.
-  `;
+  if (!supabase) {
+    console.error('[getPopularProducts] Supabase not initialized');
+    throw new Error('Supabase not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+  }
 
-  try {
-    const data = await callAI(prompt);
+  const { data: rows, error } = await supabase
+    .from('products')
+    .select('id')
+    .eq('is_active', true)
+    .order('is_featured', { ascending: false })
+    .order('price_min', { ascending: true })
+    .limit(20);
 
-    localStorage.setItem(
-      CACHE_KEY,
-      JSON.stringify({ timestamp: Date.now(), data })
-    );
-
-    return data;
-  } catch (error) {
-    console.error("Error fetching popular products:", error);
+  if (error) {
+    console.error('[getPopularProducts] Supabase error:', error);
     throw error;
   }
+
+  if (!rows || rows.length === 0) {
+    console.log('[getPopularProducts] No products found');
+    return { recommendations: [] };
+  }
+
+  const products = await fetchProductWithSpecsAndPrices(rows.map(r => r.id));
+
+  const result = { recommendations: products };
+
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data: result }));
+  } catch {
+    /* ignore */
+  }
+
+  console.log('[getPopularProducts] Supabase connection success. Fetched', products.length, 'products.');
+  return result;
 };
 
-// 🔹 PC Recommendation
 export const getPCRecommendation = async (
   useCase: UseCase,
   answers: Answer[]
 ): Promise<{ recommendations: Product[] } | null> => {
-
-  const answerString = answers
-    .map(a => `- ${a.question}: ${a.answer}`)
-    .join('\n');
-
-  // Build use-case-specific requirements
-  let useCaseRequirements = '';
-  let productTypeHint = '';
-
-  if (useCase === UseCase.GAMING) {
-    useCaseRequirements = `
-CRITICAL: These recommendations MUST be optimized for GAMING.
-- Prioritize powerful GPUs (RTX 3060 or better, or AMD RX 6600 or better)
-- Include gaming-focused components (high refresh rate monitors, gaming keyboards/mice if applicable)
-- Ensure the PC can run modern games smoothly
-- Match the budget with appropriate gaming performance tier
-- Do NOT recommend basic office PCs or laptops without dedicated GPUs`;
-    productTypeHint = 'Prefer "Prebuilt PC" or "Custom Build" types. Only recommend "Laptop" if specifically requested and it has a dedicated gaming GPU.';
-  } else if (useCase === UseCase.STUDENT) {
-    useCaseRequirements = `
-CRITICAL: These recommendations MUST be optimized for STUDENT USE.
-- Prioritize portability and battery life (laptops preferred)
-- Include components suitable for studying, coding, and academic work
-- Ensure good display quality for reading and research
-- Match the budget with student-friendly pricing
-- Do NOT recommend high-end gaming PCs unless specifically needed for engineering/CS`;
-    productTypeHint = 'Prefer "Laptop" type. Only recommend desktop PCs if portability is not important.';
-  } else if (useCase === UseCase.GENERAL) {
-    useCaseRequirements = `
-CRITICAL: These recommendations MUST be optimized for GENERAL USE.
-- Prioritize versatility and value for money
-- Include components suitable for web browsing, office work, media consumption
-- Ensure good balance between performance and price
-- Match the budget with everyday computing needs
-- Do NOT recommend specialized gaming or workstation PCs unless specifically requested`;
-    productTypeHint = 'Can be "Laptop", "Prebuilt PC", or "Custom Build" depending on form factor preference.';
+  if (!supabase) {
+    console.error('[getPCRecommendation] Supabase not initialized');
+    throw new Error('Supabase not configured.');
   }
 
-  const prompt = `
-You are recommending PCs for a user with the following requirements:
+  const useCaseMap: Record<UseCase, string[]> = {
+    [UseCase.GAMING]: ['Gaming'],
+    [UseCase.STUDENT]: ['Student'],
+    [UseCase.GENERAL]: ['General Use', 'Office', 'Mixed Use', 'General'],
+  };
 
-USE CASE: ${useCase}
-${useCaseRequirements}
+  const useCaseValues = useCaseMap[useCase];
 
-USER PREFERENCES:
-${answerString}
+  let query = supabase
+    .from('products')
+    .select('id')
+    .eq('is_active', true)
+    .in('use_case', useCaseValues);
 
-${productTypeHint}
+  const budgetAnswer = answers.find(a =>
+    a.question?.toLowerCase().includes('budget') || a.answer?.includes('₹')
+  );
 
-IMPORTANT RULES:
-1. Generate EXACTLY 2-3 recommendations (not more, not less)
-2. ALL recommendations MUST match the use case (${useCase})
-3. ALL recommendations MUST respect the budget and preferences provided
-4. Do NOT include generic or unrelated products
-5. Each recommendation should be tailored to the specific use case and answers
-6. Ensure components (CPU, GPU, RAM) are appropriate for the use case
-7. If use case is GAMING, ensure GPU is gaming-grade (RTX/GTX series or AMD RX series)
-8. If use case is STUDENT, prefer laptops unless desktop is explicitly preferred
-9. If use case is GENERAL, focus on versatility and value
+  if (budgetAnswer?.answer) {
+    const nums = (budgetAnswer.answer.match(/[\d,]+/g) || [])
+      .map(s => parseInt(s.replace(/,/g, ''), 10))
+      .filter(n => n > 0 && n < 10000000);
 
-Generate structured JSON with recommendations array matching the exact schema.
-  `;
-
-  const result = await callAI(prompt);
-  
-  // Safeguard: Limit to 3 recommendations max and ensure they exist
-  if (result && result.recommendations) {
-    return {
-      recommendations: result.recommendations.slice(0, 3)
-    };
+    if (nums.length >= 1) {
+      const minBudget = nums[0] < 1000 ? nums[0] * 1000 : nums[0];
+      const maxBudget = nums.length >= 2
+        ? (nums[1] < 1000 ? nums[1] * 1000 : nums[1])
+        : minBudget * 1.5;
+      query = query.gte('price_min', Math.floor(minBudget * 0.8)).lte('price_min', Math.ceil(maxBudget * 1.2));
+    }
   }
-  
-  return result;
+
+  const { data: rows, error } = await query.order('price_min', { ascending: true }).limit(3);
+
+  if (error) {
+    console.error('[getPCRecommendation] Supabase error:', error);
+    throw error;
+  }
+
+  if (!rows || rows.length === 0) {
+    const { data: fallback } = await supabase
+      .from('products')
+      .select('id')
+      .eq('is_active', true)
+      .order('price_min', { ascending: true })
+      .limit(3);
+
+    if (!fallback?.length) return { recommendations: [] };
+    const products = await fetchProductWithSpecsAndPrices(fallback.map(r => r.id));
+    return { recommendations: products };
+  }
+
+  const products = await fetchProductWithSpecsAndPrices(rows.map(r => r.id));
+  return { recommendations: products };
 };
 
-// 🔹 Similar Products
 export const getSimilarProducts = async (
   product: Product,
   excludeTitles: string[]
 ): Promise<{ recommendations: Product[] } | null> => {
+  if (!supabase) {
+    console.error('[getSimilarProducts] Supabase not initialized');
+    throw new Error('Supabase not configured.');
+  }
 
-  const prompt = `
-  Current product: ${product.title}
-  Price: ₹${product.estimatedPriceINR}
+  const priceMin = product.estimatedPriceINR * 0.7;
+  const priceMax = product.estimatedPriceINR * 1.3;
+  const excludeSet = new Set(excludeTitles.map(t => t.toLowerCase()));
 
-  Exclude these titles:
-  ${excludeTitles.join(', ')}
+  const { data: rows, error } = await supabase
+    .from('products')
+    .select('id, title')
+    .eq('is_active', true)
+    .eq('category', product.type)
+    .gte('price_min', Math.floor(priceMin))
+    .lte('price_min', Math.ceil(priceMax))
+    .order('price_min', { ascending: true })
+    .limit(10);
 
-  Generate 2 similar alternatives in structured JSON format.
-  `;
+  if (error) {
+    console.error('[getSimilarProducts] Supabase error:', error);
+    throw error;
+  }
 
-  return callAI(prompt);
+  const filtered = (rows || []).filter(r => !excludeSet.has((r.title || '').toLowerCase()));
+  const ids = filtered.slice(0, 3).map(r => r.id);
+
+  if (ids.length === 0) return { recommendations: [] };
+
+  const products = await fetchProductWithSpecsAndPrices(ids);
+  return { recommendations: products };
 };
