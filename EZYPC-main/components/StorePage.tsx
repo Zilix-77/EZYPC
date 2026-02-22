@@ -19,6 +19,7 @@ const ITEMS_PER_LOAD = 6;
 const SUBSEQUENT_LOAD = 3;
 
 const StorePage: React.FC<StorePageProps> = ({ products, onStartWizard, onViewDetails, isLoading, searchQuery, onSearchChange }) => {
+    const safeProducts = products ?? [];
     const [activeFilter, setActiveFilter] = useState<FilterType>('All');
     const [visibleCount, setVisibleCount] = useState(ITEMS_PER_LOAD);
     const observer = useRef<IntersectionObserver | null>(null);
@@ -26,16 +27,16 @@ const StorePage: React.FC<StorePageProps> = ({ products, onStartWizard, onViewDe
     // FIX: Explicitly set the return type of useMemo to `FilterType[]` to prevent
     // TypeScript from inferring a wider `string[]` type, which causes a mismatch.
     const availableFilters = useMemo((): FilterType[] => {
-        if (!products || products.length === 0) {
+        if (safeProducts.length === 0) {
             return ['All'];
         }
-        const types = new Set(products.map(p => p.type));
+        const types = new Set(safeProducts.map(p => p.type));
         const sortedTypes = Array.from(types).sort();
         return ['All', ...sortedTypes];
-    }, [products]);
+    }, [safeProducts]);
 
     const filteredProducts = useMemo(() => {
-        let results = products;
+        let results = safeProducts;
 
         // Apply category filter
         if (activeFilter !== 'All') {
@@ -46,13 +47,13 @@ const StorePage: React.FC<StorePageProps> = ({ products, onStartWizard, onViewDe
         if (searchQuery) {
             const lowercasedQuery = searchQuery.toLowerCase();
             results = results.filter(product => {
-                const searchableText = `${product.title} ${product.type} ${product.components.map(c => c.spec).join(' ')}`.toLowerCase();
+                const searchableText = `${product.title} ${product.type} ${(product.components ?? []).map(c => c.spec).join(' ')}`.toLowerCase();
                 return searchableText.includes(lowercasedQuery);
             });
         }
         
         return results;
-    }, [products, activeFilter, searchQuery]);
+    }, [safeProducts, activeFilter, searchQuery]);
 
     useEffect(() => {
         if (!availableFilters.includes(activeFilter)) {

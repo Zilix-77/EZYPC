@@ -30,7 +30,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetails }) => 
     maximumFractionDigits: 0
   }).format(estimatedPriceINR);
 
-  const keySpecs = components.filter(c => ['Processor', 'Graphics Card', 'RAM', 'Storage'].includes(c.name)).slice(0, 4);
+  const keySpecs = (components ?? []).filter(c => ['Processor', 'Graphics Card', 'RAM', 'Storage'].includes(c.name)).slice(0, 4);
 
   return (
     <motion.div

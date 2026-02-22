@@ -80,7 +80,7 @@ const App: React.FC = () => {
     const recommendedIds = new Set(recommendedProducts.map(p => p.title));
     const taggedProducts: Product[] = recommendedProducts.map(p => ({ ...p, tag: 'Recommended for You' }));
     
-    const otherProducts = products.filter(p => !recommendedIds.has(p.title));
+    const otherProducts = (products ?? []).filter(p => !recommendedIds.has(p.title));
 
     setProducts([...taggedProducts, ...otherProducts]);
     setIsWizardOpen(false);
