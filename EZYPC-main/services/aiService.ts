@@ -3,6 +3,28 @@ import { UseCase, Answer, Product } from '../types';
 const CACHE_KEY = 'popularProducts';
 const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+const UNSPLASH_BASE = 'https://source.unsplash.com/600x400/?';
+
+/** Build a working public image URL from product title using Unsplash. */
+function getImageUrlForTitle(title: string): string {
+  const keywords = title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 4)
+    .join(',');
+  return `${UNSPLASH_BASE}${encodeURIComponent(keywords || 'computer,pc')}`;
+}
+
+/** Ensure each recommendation has a working imageUrl from Unsplash based on title. */
+function normalizeRecommendations(recommendations: Product[]): Product[] {
+  return recommendations.map((rec) => ({
+    ...rec,
+    imageUrl: getImageUrlForTitle(rec.title),
+  }));
+}
+
 // 🔹 Call backend API
 const callAI = async (prompt: string) => {
   console.log('[callAI] Called with prompt:', prompt);
@@ -45,7 +67,8 @@ const callAI = async (prompt: string) => {
     data.recommendations.length
   );
 
-  return { recommendations: data.recommendations };
+  const normalized = normalizeRecommendations(data.recommendations);
+  return { recommendations: normalized };
 };
 
 // 🔹 Popular Products
