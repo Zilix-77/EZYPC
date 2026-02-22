@@ -7,17 +7,29 @@ import { motion, Variants } from 'framer-motion';
 interface ProductCardProps {
   product: Product;
   onViewDetails: () => void;
+  /** Optional index for staggered entrance (e.g. index * 0.05s). */
+  staggerIndex?: number;
 }
 
 const cardVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { duration: 0.2, ease: 'easeOut' },
+  hidden: {
+    opacity: 0,
+    y: 24,
+    scale: 0.96,
   },
+  visible: (i = 0) => ({
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.45,
+      delay: i * 0.06,
+      ease: [0.22, 0.61, 0.36, 1],
+    },
+  }),
 };
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetails }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetails, staggerIndex = 0 }) => {
   const { type, title, rationale, estimatedPriceINR, components, imageUrl, tag, isBestMatch } = product;
   const formattedPrice = new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -32,7 +44,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetails }) => 
       variants={cardVariants}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, amount: 0.05, margin: '40px' }}
+      custom={staggerIndex}
+      viewport={{ once: true, amount: 0.12, margin: '80px' }}
       className="bg-surface dark:bg-dark-surface rounded-xl border border-on-surface/10 dark:border-dark-on-surface/10 hover:border-on-surface/20 dark:hover:border-dark-on-surface/20 transition-all duration-300 flex flex-col justify-between h-full overflow-hidden group hover:scale-[1.02] hover:shadow-xl shadow-black/5"
     >
       <div>

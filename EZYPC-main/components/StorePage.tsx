@@ -158,8 +158,8 @@ const StorePage: React.FC<StorePageProps> = ({ products, onStartWizard, onViewDe
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {visibleProducts.length > 0 ? (
-                    visibleProducts.map((product) => (
-                        <ProductCard key={product.id ?? product.title} product={product} onViewDetails={() => onViewDetails(product)} />
+                    visibleProducts.map((product, index) => (
+                        <ProductCard key={product.id ?? product.title} product={product} onViewDetails={() => onViewDetails(product)} staggerIndex={index} />
                     ))
                 ) : (
                     <motion.div
