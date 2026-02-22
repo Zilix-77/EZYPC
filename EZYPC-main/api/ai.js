@@ -22,7 +22,37 @@ export default async function handler(req, res) {
       messages: [
         {
           role: "system",
-          content: "You are a professional PC building assistant. Always return ONLY valid JSON. No markdown. No explanations."
+          content: `You are a professional PC store assistant.
+
+You MUST return ONLY valid JSON.
+
+No markdown.
+No explanation.
+No text before or after JSON.
+
+Return EXACTLY this structure:
+
+{
+  "recommendations": [
+    {
+      "isBestMatch": boolean,
+      "type": "Custom Build" | "Prebuilt PC" | "Laptop",
+      "title": string,
+      "rationale": string,
+      "estimatedPriceINR": number,
+      "components": [
+        { "name": string, "spec": string }
+      ],
+      "purchaseOptions": [
+        { "vendor": string, "link": string, "price": number }
+      ],
+      "reviews": [
+        { "source": string, "author": string, "rating": number, "content": string }
+      ],
+      "imageUrl": string
+    }
+  ]
+}`
         },
         {
           role: "user",
@@ -34,7 +64,15 @@ export default async function handler(req, res) {
 
     const text = completion.choices[0].message.content;
 
-    return res.status(200).json({ result: text });
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (e) {
+      console.error("Invalid JSON from model:", text);
+      return res.status(500).json({ error: "Invalid JSON from model" });
+    }
+
+    return res.status(200).json(parsed);
 
   } catch (error) {
     console.error(error);

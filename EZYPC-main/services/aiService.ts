@@ -35,29 +35,17 @@ const callAI = async (prompt: string) => {
   const data = await response.json();
   console.log('[callAI] Raw data from /api/ai:', data);
 
-  if (!data || typeof data.result !== 'string') {
+  if (!data || !data.recommendations || !Array.isArray(data.recommendations)) {
     console.error('[callAI] Unexpected AI response shape:', data);
     throw new Error('Invalid AI response from server');
   }
 
-  let parsed: any;
-  try {
-    parsed = JSON.parse(data.result);
-  } catch (e) {
-    console.error('[callAI] Failed to parse AI JSON result:', e, data.result);
-    throw new Error('Failed to parse AI response');
-  }
-
-  const wrapped = {
-    recommendations: parsed?.recommendations ?? [],
-  };
-
   console.log(
-    '[callAI] Parsed recommendations count:',
-    Array.isArray(wrapped.recommendations) ? wrapped.recommendations.length : 0
+    '[callAI] Recommendations count:',
+    data.recommendations.length
   );
 
-  return wrapped;
+  return { recommendations: data.recommendations };
 };
 
 // 🔹 Popular Products
