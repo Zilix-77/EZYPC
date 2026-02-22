@@ -38,6 +38,7 @@ function mapRowToProduct(
     : row.price_min;
 
   return {
+    id: row.id,
     isBestMatch: row.is_best_match ?? false,
     type: row.category as 'Laptop' | 'Prebuilt PC' | 'Custom Build',
     title: row.title,
@@ -93,23 +94,12 @@ async function fetchProductWithSpecsAndPrices(productIds: string[]) {
   );
 }
 
-export const getPopularProducts = async (): Promise<{ recommendations: Product[] } | null> => {
-  const cachedData = localStorage.getItem(CACHE_KEY);
-
-  if (cachedData) {
-    try {
-      const { timestamp, data } = JSON.parse(cachedData);
-      if (Date.now() - timestamp < CACHE_DURATION_MS) {
-        console.log('[getPopularProducts] Serving from cache');
-        return data;
-      }
-    } catch {
-      /* ignore */
-    }
-  }
-
+export const getProductsPage = async (
+  offset: number,
+  limit: number
+): Promise<{ recommendations: Product[]; hasMore: boolean }> => {
   if (!supabase) {
-    console.error('[getPopularProducts] Supabase not initialized');
+    console.error('[getProductsPage] Supabase not initialized');
     throw new Error('Supabase not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
   }
 
@@ -119,31 +109,34 @@ export const getPopularProducts = async (): Promise<{ recommendations: Product[]
     .eq('is_active', true)
     .order('is_featured', { ascending: false })
     .order('price_min', { ascending: true })
-    .limit(20);
+    .range(offset, offset + limit - 1);
 
   if (error) {
-    console.error('[getPopularProducts] Supabase error:', error);
+    console.error('[getProductsPage] Supabase error:', error);
     throw error;
   }
 
   if (!rows || rows.length === 0) {
-    console.log('[getPopularProducts] No products found');
-    return { recommendations: [] };
+    console.log('[getProductsPage] Batch:', offset, limit, '| Fetched: 0 | Total loaded: 0');
+    return { recommendations: [], hasMore: false };
   }
 
-  const products = await fetchProductWithSpecsAndPrices(rows.map(r => r.id));
+  const products = await fetchProductWithSpecsAndPrices(rows.map((r) => r.id));
+  const hasMore = rows.length >= limit;
 
-  const result = { recommendations: products };
-
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data: result }));
-  } catch {
-    /* ignore */
-  }
-
-  console.log('[getPopularProducts] Supabase connection success. Fetched', products.length, 'products.');
-  return result;
+  console.log('[getProductsPage] Batch:', offset, limit, '| Fetched:', products.length, '| hasMore:', hasMore);
+  return { recommendations: products, hasMore };
 };
+
+function gpuTierRank(specsText: string): number {
+  const s = (specsText || '').toLowerCase();
+  if (s.includes('rtx 40') || s.includes('rtx 4070') || s.includes('rtx 4060') || s.includes('rtx 4050')) return 40;
+  if (s.includes('rtx 30') || s.includes('rtx 3060') || s.includes('rtx 3070') || s.includes('rtx 3050')) return 30;
+  if (s.includes('rtx 20') || s.includes('gtx 16')) return 20;
+  if (s.includes('gtx 1650') || s.includes('gtx 1660')) return 16;
+  if (s.includes('mx550') || s.includes('mx5')) return 10;
+  return 0;
+}
 
 function parseBudgetFromAnswers(answers: Answer[]): { minBudget?: number; maxBudget?: number } | null {
   const budgetAnswer = answers.find(
@@ -197,7 +190,7 @@ export const getPCRecommendation = async (
 
   const { data: candidateRows, error } = await query
     .order('price_min', { ascending: true })
-    .limit(15);
+    .range(0, 199);
 
   if (error) {
     console.error('[getPCRecommendation] Supabase error:', error);
@@ -210,7 +203,7 @@ export const getPCRecommendation = async (
       .select('id')
       .eq('is_active', true)
       .order('price_min', { ascending: true })
-      .limit(3);
+      .range(0, 2);
 
     if (!fallback?.length) return { recommendations: [] };
     const products = await fetchProductWithSpecsAndPrices(fallback.map((r) => r.id));
@@ -231,12 +224,28 @@ export const getPCRecommendation = async (
     specsByProduct.set(s.product_id, existing ? `${existing}; ${part}` : part);
   });
 
-  const productsForAi = candidateRows.map((p) => ({
+  const withTier = candidateRows.map((r) => ({
+    ...r,
+    specsText: specsByProduct.get(r.id) ?? '',
+    gpuTier: gpuTierRank(specsByProduct.get(r.id) ?? ''),
+  }));
+
+  withTier.sort((a, b) => {
+    if (b.gpuTier !== a.gpuTier) return b.gpuTier - a.gpuTier;
+    return a.price_min - b.price_min;
+  });
+
+  const top10 = withTier.slice(0, 10);
+  const candidateIdsTop = top10.map((r) => r.id);
+
+  console.log('[getPCRecommendation] AI candidate pool size:', top10.length, '(from', candidateRows.length, 'within budget)');
+
+  const productsForAi = top10.map((p) => ({
     id: p.id,
     title: p.title,
     brand: p.brand ?? '',
     price_min: p.price_min,
-    specs: specsByProduct.get(p.id) ?? '',
+    specs: p.specsText,
   }));
 
   const userContext = `Use case: ${useCase}. User answers: ${answers.map((a) => `${a.question}: ${a.answer}`).join('; ')}`;
@@ -257,12 +266,12 @@ export const getPCRecommendation = async (
   const selections = data?.selections ?? [];
   const validIds = selections
     .map((s) => s?.product_id)
-    .filter((id): id is string => typeof id === 'string' && candidateIds.includes(id))
+    .filter((id): id is string => typeof id === 'string' && candidateIdsTop.includes(id))
     .slice(0, 3);
 
   const uniqueIds = Array.from(new Set(validIds));
   if (uniqueIds.length === 0) {
-    const products = await fetchProductWithSpecsAndPrices(candidateIds.slice(0, 3));
+    const products = await fetchProductWithSpecsAndPrices(candidateIdsTop.slice(0, 3));
     return { recommendations: products };
   }
 
@@ -273,7 +282,7 @@ export const getPCRecommendation = async (
 
   const fullProducts = await fetchProductWithSpecsAndPrices(uniqueIds);
 
-  const idToTitle = new Map(candidateRows.map((r) => [r.id, r.title]));
+  const idToTitle = new Map(top10.map((r) => [r.id, r.title]));
 
   const recommendations: Product[] = uniqueIds
     .map((id) => {

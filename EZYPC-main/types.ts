@@ -43,6 +43,7 @@ export type ProductType = 'Custom Build' | 'Prebuilt PC' | 'Laptop';
 export type FilterType = 'All' | ProductType;
 
 export interface Product {
+  id?: string;
   isBestMatch: boolean;
   type: ProductType;
   title: string;

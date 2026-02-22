@@ -1,12 +1,15 @@
-import React, { useState, useCallback, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import { Page, Product } from './types';
 import Header from './components/Header';
-import { getPopularProducts } from './services/aiService';
+import { getProductsPage } from './services/aiService';
 import IntroAnimation from './components/IntroAnimation';
 import RecommendationWizard from './components/RecommendationWizard';
 import LoadingSpinner from './components/LoadingSpinner';
 import { AnimatePresence } from 'framer-motion';
 import { useTheme } from './hooks/useTheme';
+
+const INITIAL_PAGE_SIZE = 12;
+const NEXT_BATCH_SIZE = 50;
 
 // Performance: Lazy load page components
 const StorePage = lazy(() => import('./components/StorePage'));
@@ -14,7 +17,7 @@ const UsedPartsPage = lazy(() => import('./components/UsedPartsPage'));
 const ProductDetailPage = lazy(() => import('./components/ProductDetailPage'));
 
 const App: React.FC = () => {
-  useTheme(); // Initialize and manage theme
+  useTheme();
   const [page, setPage] = useState<Page>(Page.STORE);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -23,15 +26,16 @@ const App: React.FC = () => {
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
   const [isIntroComplete, setIntroComplete] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const hasFetchedRef = useRef(false);
+  const hasFetchedBackgroundRef = useRef(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-        setIntroComplete(true);
-    }, 2000); // Increased duration for the new animation
+    const timer = setTimeout(() => setIntroComplete(true), 2000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Performance: Preload components for faster navigation after intro
   useEffect(() => {
     if (isIntroComplete) {
       import('./components/UsedPartsPage');
@@ -39,30 +43,72 @@ const App: React.FC = () => {
     }
   }, [isIntroComplete]);
 
-
-  const fetchInitialProducts = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+  const fetchProducts = useCallback(async (pageOffset: number, limit: number, append: boolean) => {
+    if (append) {
+      setError(null);
+    } else {
+      setIsLoading(true);
+      setError(null);
+    }
     try {
-      const result = await getPopularProducts();
-      if (result && result.recommendations) {
-        setProducts(result.recommendations);
+      const result = await getProductsPage(pageOffset, limit);
+      if (!result) {
+        if (!append) setError('Could not load products. Please try again later.');
+        return;
+      }
+      const fetched = result.recommendations ?? [];
+      setHasMore(result.hasMore ?? false);
+      setOffset(pageOffset + fetched.length);
+
+      if (append) {
+        setProducts((prev) => {
+          const byKey = (p: Product) => p.id ?? p.title;
+          const existingKeys = new Set(prev.map(byKey));
+          const unique = fetched.filter((p) => !existingKeys.has(byKey(p)));
+          const next = [...prev, ...unique];
+          console.log('[App] Total loaded products:', next.length);
+          return next;
+        });
       } else {
-        setError('Could not load products. Please try again later.');
+        setProducts(fetched);
+        console.log('[App] Initial load. Total loaded products:', fetched.length);
       }
     } catch (e) {
       console.error(e);
-      setError('An error occurred while fetching products. Please check your API key and try again.');
+      if (!append) {
+        setError('An error occurred while fetching products. Please try again.');
+      }
     } finally {
-      setIsLoading(false);
+      if (!append) setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if(isIntroComplete) {
-      fetchInitialProducts();
-    }
-  }, [fetchInitialProducts, isIntroComplete]);
+    if (!isIntroComplete) return;
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+    fetchProducts(0, INITIAL_PAGE_SIZE, false);
+  }, [isIntroComplete, fetchProducts]);
+
+  useEffect(() => {
+    if (!isIntroComplete || !hasMore || isLoading || products.length < INITIAL_PAGE_SIZE) return;
+    if (hasFetchedBackgroundRef.current) return;
+    hasFetchedBackgroundRef.current = true;
+    fetchProducts(INITIAL_PAGE_SIZE, NEXT_BATCH_SIZE, true);
+  }, [isIntroComplete, isLoading, products.length, hasMore, fetchProducts]);
+
+  const loadMoreProducts = useCallback(() => {
+    if (!hasMore || isLoading) return;
+    fetchProducts(offset, NEXT_BATCH_SIZE, true);
+  }, [hasMore, isLoading, offset, fetchProducts]);
+
+  const fetchInitialProducts = useCallback(() => {
+    hasFetchedRef.current = false;
+    hasFetchedBackgroundRef.current = false;
+    setOffset(0);
+    setHasMore(true);
+    fetchProducts(0, INITIAL_PAGE_SIZE, false);
+  }, [fetchProducts]);
 
   const handleNavigate = (newPage: Page) => {
     if (newPage === Page.STORE) {
