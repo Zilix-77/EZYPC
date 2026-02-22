@@ -49,7 +49,7 @@ Return EXACTLY this structure:
       "reviews": [
         { "source": string, "author": string, "rating": number, "content": string }
       ],
-      "imageUrl": string — MUST be a working public URL: https://source.unsplash.com/600x400/?keyword1,keyword2 using keywords from the product title (e.g. gaming,pc or laptop,work)
+      "imageUrl": string — MUST be a working public URL: https://picsum.photos/seed/{product-title}/600/400 (will be generated automatically)
     }
   ]
 }`
