@@ -9,16 +9,11 @@ interface ProductCardProps {
   onViewDetails: () => void;
 }
 
-// FIX: Explicitly type cardVariants with Variants to fix type incompatibility.
 const cardVariants: Variants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-      ease: [0.25, 0.1, 0.25, 1.0],
-    },
+    transition: { duration: 0.2, ease: 'easeOut' },
   },
 };
 
@@ -37,8 +32,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetails }) => 
       variants={cardVariants}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, amount: 0.2 }}
-      className="bg-surface dark:bg-dark-surface rounded-xl border border-on-surface/10 dark:border-dark-on-surface/10 hover:border-on-surface/20 dark:hover:border-dark-on-surface/20 transition-all duration-300 flex flex-col justify-between h-full overflow-hidden group hover:scale-[1.03] hover:shadow-2xl shadow-black/5"
+      viewport={{ once: true, amount: 0.05, margin: '40px' }}
+      className="bg-surface dark:bg-dark-surface rounded-xl border border-on-surface/10 dark:border-dark-on-surface/10 hover:border-on-surface/20 dark:hover:border-dark-on-surface/20 transition-all duration-300 flex flex-col justify-between h-full overflow-hidden group hover:scale-[1.02] hover:shadow-xl shadow-black/5"
     >
       <div>
         <div className="aspect-video w-full">

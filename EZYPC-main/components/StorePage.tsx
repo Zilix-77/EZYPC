@@ -16,7 +16,7 @@ interface StorePageProps {
 }
 
 const ITEMS_PER_LOAD = 6;
-const SUBSEQUENT_LOAD = 3;
+const SUBSEQUENT_LOAD = 6;
 
 const StorePage: React.FC<StorePageProps> = ({ products, onStartWizard, onViewDetails, isLoading, searchQuery, onSearchChange }) => {
     const safeProducts = products ?? [];
@@ -73,13 +73,14 @@ const StorePage: React.FC<StorePageProps> = ({ products, onStartWizard, onViewDe
 
     const loaderRef = useCallback(node => {
         if (observer.current) observer.current.disconnect();
-        observer.current = new IntersectionObserver(entries => {
-            if (entries[0].isIntersecting && hasMore) {
-                setTimeout(() => {
+        observer.current = new IntersectionObserver(
+            entries => {
+                if (entries[0].isIntersecting && hasMore) {
                     setVisibleCount(prev => Math.min(prev + SUBSEQUENT_LOAD, filteredProducts.length));
-                }, 400); 
-            }
-        });
+                }
+            },
+            { rootMargin: '200px 0px', threshold: 0 }
+        );
         if (node) observer.current.observe(node);
     }, [hasMore, filteredProducts.length]);
 
@@ -155,26 +156,22 @@ const StorePage: React.FC<StorePageProps> = ({ products, onStartWizard, onViewDe
                  <FilterBar filters={availableFilters} activeFilter={activeFilter} onFilterChange={setActiveFilter} />
             </div>
 
-            <motion.div 
-                layout
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
-                <AnimatePresence>
-                    {visibleProducts.length > 0 ? (
-                        visibleProducts.map((product, index) => (
-                           <ProductCard key={product.title} product={product} onViewDetails={() => onViewDetails(product)} />
-                        ))
-                    ) : (
-                        <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="col-span-full text-center py-16 text-on-surface-secondary dark:text-dark-on-surface-secondary"
-                        >
-                            No products found. Try adjusting your search or filters.
-                        </motion.div>
-                    )}
-                 </AnimatePresence>
-            </motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {visibleProducts.length > 0 ? (
+                    visibleProducts.map((product) => (
+                        <ProductCard key={product.id ?? product.title} product={product} onViewDetails={() => onViewDetails(product)} />
+                    ))
+                ) : (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.2 }}
+                        className="col-span-full text-center py-16 text-on-surface-secondary dark:text-dark-on-surface-secondary"
+                    >
+                        No products found. Try adjusting your search or filters.
+                    </motion.div>
+                )}
+            </div>
             
             {hasMore && (
                 <div ref={loaderRef} className="flex justify-center items-center p-8">
