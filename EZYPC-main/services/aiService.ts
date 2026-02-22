@@ -145,6 +145,25 @@ export const getPopularProducts = async (): Promise<{ recommendations: Product[]
   return result;
 };
 
+function parseBudgetFromAnswers(answers: Answer[]): { minBudget?: number; maxBudget?: number } | null {
+  const budgetAnswer = answers.find(
+    (a) => a.question?.toLowerCase().includes('budget') || a.answer?.includes('₹')
+  );
+  if (!budgetAnswer?.answer) return null;
+
+  const nums = (budgetAnswer.answer.match(/[\d,]+/g) || [])
+    .map((s) => parseInt(s.replace(/,/g, ''), 10))
+    .filter((n) => n > 0 && n < 10000000);
+
+  if (nums.length < 1) return null;
+
+  const minBudget = nums[0] < 1000 ? nums[0] * 1000 : nums[0];
+  const maxBudget =
+    nums.length >= 2 ? (nums[1] < 1000 ? nums[1] * 1000 : nums[1]) : minBudget * 1.5;
+
+  return { minBudget, maxBudget };
+}
+
 export const getPCRecommendation = async (
   useCase: UseCase,
   answers: Answer[]
@@ -161,39 +180,31 @@ export const getPCRecommendation = async (
   };
 
   const useCaseValues = useCaseMap[useCase];
+  const budget = parseBudgetFromAnswers(answers);
 
   let query = supabase
     .from('products')
-    .select('id')
+    .select('id, title, brand, price_min')
     .eq('is_active', true)
     .in('use_case', useCaseValues);
 
-  const budgetAnswer = answers.find(a =>
-    a.question?.toLowerCase().includes('budget') || a.answer?.includes('₹')
-  );
-
-  if (budgetAnswer?.answer) {
-    const nums = (budgetAnswer.answer.match(/[\d,]+/g) || [])
-      .map(s => parseInt(s.replace(/,/g, ''), 10))
-      .filter(n => n > 0 && n < 10000000);
-
-    if (nums.length >= 1) {
-      const minBudget = nums[0] < 1000 ? nums[0] * 1000 : nums[0];
-      const maxBudget = nums.length >= 2
-        ? (nums[1] < 1000 ? nums[1] * 1000 : nums[1])
-        : minBudget * 1.5;
-      query = query.gte('price_min', Math.floor(minBudget * 0.8)).lte('price_min', Math.ceil(maxBudget * 1.2));
-    }
+  if (budget?.minBudget != null) {
+    query = query.gte('price_min', Math.floor(budget.minBudget * 0.8));
+  }
+  if (budget?.maxBudget != null) {
+    query = query.lte('price_min', Math.ceil(budget.maxBudget * 1.2));
   }
 
-  const { data: rows, error } = await query.order('price_min', { ascending: true }).limit(3);
+  const { data: candidateRows, error } = await query
+    .order('price_min', { ascending: true })
+    .limit(15);
 
   if (error) {
     console.error('[getPCRecommendation] Supabase error:', error);
     throw error;
   }
 
-  if (!rows || rows.length === 0) {
+  if (!candidateRows || candidateRows.length === 0) {
     const { data: fallback } = await supabase
       .from('products')
       .select('id')
@@ -202,12 +213,83 @@ export const getPCRecommendation = async (
       .limit(3);
 
     if (!fallback?.length) return { recommendations: [] };
-    const products = await fetchProductWithSpecsAndPrices(fallback.map(r => r.id));
+    const products = await fetchProductWithSpecsAndPrices(fallback.map((r) => r.id));
     return { recommendations: products };
   }
 
-  const products = await fetchProductWithSpecsAndPrices(rows.map(r => r.id));
-  return { recommendations: products };
+  const candidateIds = candidateRows.map((r) => r.id);
+
+  const { data: specsRows } = await supabase
+    .from('product_specs')
+    .select('product_id, spec_name, spec_value')
+    .in('product_id', candidateIds);
+
+  const specsByProduct = new Map<string, string>();
+  (specsRows || []).forEach((s) => {
+    const existing = specsByProduct.get(s.product_id) || '';
+    const part = `${s.spec_name}: ${s.spec_value}`;
+    specsByProduct.set(s.product_id, existing ? `${existing}; ${part}` : part);
+  });
+
+  const productsForAi = candidateRows.map((p) => ({
+    id: p.id,
+    title: p.title,
+    brand: p.brand ?? '',
+    price_min: p.price_min,
+    specs: specsByProduct.get(p.id) ?? '',
+  }));
+
+  const userContext = `Use case: ${useCase}. User answers: ${answers.map((a) => `${a.question}: ${a.answer}`).join('; ')}`;
+
+  const response = await fetch('/api/ai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ products: productsForAi, userContext }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error((err as { error?: string }).error || 'AI recommendation failed');
+  }
+
+  const data = (await response.json()) as { selections?: { product_id: string; reason: string }[] };
+
+  const selections = data?.selections ?? [];
+  const validIds = selections
+    .map((s) => s?.product_id)
+    .filter((id): id is string => typeof id === 'string' && candidateIds.includes(id))
+    .slice(0, 3);
+
+  const uniqueIds = Array.from(new Set(validIds));
+  if (uniqueIds.length === 0) {
+    const products = await fetchProductWithSpecsAndPrices(candidateIds.slice(0, 3));
+    return { recommendations: products };
+  }
+
+  const reasonByProductId = new Map<string, string>();
+  selections.forEach((s) => {
+    if (s?.product_id && s?.reason) reasonByProductId.set(s.product_id, s.reason);
+  });
+
+  const fullProducts = await fetchProductWithSpecsAndPrices(uniqueIds);
+
+  const idToTitle = new Map(candidateRows.map((r) => [r.id, r.title]));
+
+  const recommendations: Product[] = uniqueIds
+    .map((id) => {
+      const title = idToTitle.get(id);
+      const product = fullProducts.find((p) => p.title === title);
+      if (!product) return null;
+      const reason = reasonByProductId.get(id);
+      return reason ? { ...product, rationale: reason } : product;
+    })
+    .filter((p): p is Product => p != null);
+
+  if (recommendations.length === 0) {
+    return { recommendations: fullProducts.slice(0, 3) };
+  }
+
+  return { recommendations };
 };
 
 export const getSimilarProducts = async (
