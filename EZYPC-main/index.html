@@ -80,12 +80,44 @@
         font-feature-settings: "ss01", "ss02", "cv01", "cv02";
       }
 
-      /* Explicit dark mode text color fix */
-      .text-on-surface {
+      /* Global Text Color Fix for Dark Mode */
+      body {
         color: #000000;
       }
-      .dark .text-on-surface {
+      .dark body {
         color: #FFFFFF;
+      }
+
+      /* Ensure common text utilities respect dark mode */
+      .text-black { color: #000000; }
+      .dark .text-black, .dark .text-on-surface { color: #FFFFFF !important; }
+      
+      .text-on-surface { color: #000000; }
+      .dark .text-on-surface { color: #FFFFFF !important; }
+
+      .text-on-surface-secondary { color: #666666; }
+      .dark .text-on-surface-secondary { color: #A0A0A0 !important; }
+
+      /* Force all headings to stay white in dark mode if they have specific black classes */
+      .dark h1, .dark h2, .dark h3, .dark h4, .dark p, .dark span, .dark div {
+        --tw-text-opacity: 1;
+      }
+
+      /* Extreme Dark Mode legible text override */
+      .dark .text-black, 
+      .dark .text-on-surface, 
+      .dark .text-on-surface-secondary,
+      .dark [class*="text-black"],
+      .dark [class*="text-on-surface"] {
+        color: #FFFFFF !important;
+      }
+
+      .dark .text-on-surface-secondary {
+        color: rgba(255,255,255,0.6) !important;
+      }
+
+      .dark .group-hover\:text-black:hover {
+        color: #000000 !important;
       }
 
       /* Noise Overlay */

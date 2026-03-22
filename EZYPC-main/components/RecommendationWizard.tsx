@@ -96,7 +96,7 @@ const RecommendationWizard: React.FC<RecommendationWizardProps> = ({ isOpen, onC
                         className="w-full max-w-2xl mx-auto"
                     >
                         <span className="text-[10px] font-black tracking-[0.4em] text-black/40 dark:text-white/40 uppercase mb-4 block text-center" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>Step 01</span>
-                        <h2 className="text-4xl sm:text-5xl font-black text-center text-on-surface dark:text-dark-on-surface uppercase tracking-tighter mb-12 leading-tight" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>
+                        <h2 className="text-4xl sm:text-5xl font-black text-center text-on-surface uppercase tracking-tighter mb-12 leading-tight" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>
                             What is your <br />primary focus?
                         </h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -141,7 +141,7 @@ const RecommendationWizard: React.FC<RecommendationWizardProps> = ({ isOpen, onC
                             </div>
                         </div>
                         
-                        <h2 className="text-3xl sm:text-4xl font-black text-on-surface dark:text-dark-on-surface mb-12 uppercase tracking-tighter leading-tight" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>
+                        <h2 className="text-3xl sm:text-4xl font-black text-on-surface mb-12 uppercase tracking-tighter leading-tight" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>
                             {questions[currentQuestionIndex].question}
                         </h2>
                         
@@ -185,8 +185,8 @@ const RecommendationWizard: React.FC<RecommendationWizardProps> = ({ isOpen, onC
                  return (
                     <div className="flex flex-col items-center justify-center text-center p-12">
                         <span className="text-[10px] font-black tracking-[0.4em] text-red-500 uppercase mb-4" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>Error Detected</span>
-                        <h2 className="text-2xl font-black text-black dark:text-white uppercase tracking-tighter mb-4" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>Operation Failed</h2>
-                        <p className="text-xs text-black/40 dark:text-white/40 mt-2 max-w-sm mb-12 uppercase tracking-widest">{error}</p>
+                        <h2 className="text-2xl font-black text-on-surface uppercase tracking-tighter mb-4" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>Operation Failed</h2>
+                        <p className="text-xs text-on-surface-secondary mt-2 max-w-sm mb-12 uppercase tracking-widest">{error}</p>
                         <button 
                             onClick={resetAndClose} 
                             className="px-10 py-5 bg-black dark:bg-white text-white dark:text-black text-xs font-black tracking-widest uppercase hover:scale-105 transition-transform"

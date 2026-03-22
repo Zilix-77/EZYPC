@@ -17,8 +17,8 @@ const FilterBar: React.FC<FilterBarProps> = ({ activeFilter, onFilterChange, fil
                     onClick={() => onFilterChange(filter)}
                     className={`text-[10px] sm:text-xs font-black tracking-[0.2em] uppercase transition-all duration-300 relative py-2 ${
                         activeFilter === filter 
-                        ? 'text-on-surface dark:text-dark-on-surface' 
-                        : 'text-on-surface-secondary dark:text-dark-on-surface-secondary hover:text-on-surface dark:hover:text-dark-on-surface'
+                        ? 'text-on-surface' 
+                        : 'text-on-surface-secondary hover:text-on-surface'
                     }`}
                     style={{ fontFamily: '"Host Grotesk", sans-serif' }}
                 >
