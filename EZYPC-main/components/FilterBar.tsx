@@ -1,5 +1,6 @@
 import React from 'react';
 import { FilterType } from '../types';
+import { motion } from 'framer-motion';
 
 interface FilterBarProps {
     activeFilter: FilterType;
@@ -9,18 +10,26 @@ interface FilterBarProps {
 
 const FilterBar: React.FC<FilterBarProps> = ({ activeFilter, onFilterChange, filters }) => {
     return (
-        <div className="flex items-center flex-wrap gap-2 sm:gap-4 bg-surface dark:bg-dark-surface border border-on-surface/10 dark:border-dark-on-surface/10 p-2 rounded-xl">
+        <div className="flex items-center flex-wrap gap-8 py-4 px-0 border-b border-on-surface/10 dark:border-dark-on-surface/10">
             {filters.map(filter => (
                 <button
                     key={filter}
                     onClick={() => onFilterChange(filter)}
-                    className={`px-4 py-2 text-sm sm:text-base font-semibold rounded-lg transition-colors duration-200 ${
+                    className={`text-[10px] sm:text-xs font-black tracking-[0.2em] uppercase transition-all duration-300 relative py-2 ${
                         activeFilter === filter 
-                        ? 'bg-primary dark:bg-dark-primary text-white' 
-                        : 'text-on-surface-secondary dark:text-dark-on-surface-secondary hover:text-on-surface dark:hover:text-dark-on-surface hover:bg-black/5 dark:hover:bg-white/5'
+                        ? 'text-on-surface dark:text-dark-on-surface' 
+                        : 'text-on-surface-secondary dark:text-dark-on-surface-secondary hover:text-on-surface dark:hover:text-dark-on-surface'
                     }`}
+                    style={{ fontFamily: '"Host Grotesk", sans-serif' }}
                 >
                     {filter}
+                    {activeFilter === filter && (
+                        <motion.div 
+                            layoutId="filter-underline" 
+                            className="absolute bottom-0 left-0 right-0 h-[3px] bg-on-surface dark:bg-dark-on-surface" 
+                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                        />
+                    )}
                 </button>
             ))}
         </div>

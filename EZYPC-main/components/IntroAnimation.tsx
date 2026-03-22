@@ -1,57 +1,51 @@
-import React from 'react';
-// FIX: Import Variants type from framer-motion to resolve type error.
-import { motion, Variants } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import AnimatedLogo from './AnimatedLogo';
 
-// FIX: Explicitly type with Variants to prevent type inference issues.
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.4,
-      delayChildren: 1.2,
-    },
-  },
-};
-
-// FIX: Explicitly type with Variants to prevent type inference issues.
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: 'spring',
-      stiffness: 120,
-      damping: 12,
-    },
-  },
-};
-
-
 const IntroAnimation: React.FC = () => {
+    const [showText, setShowText] = useState(false);
+
+    useEffect(() => {
+        // Sequenced timing for premium feel
+        const textTimer = setTimeout(() => setShowText(true), 1200);
+        return () => clearTimeout(textTimer);
+    }, []);
+
     return (
         <motion.div
-            className="fixed inset-0 bg-base dark:bg-dark-base z-50 flex items-center justify-center"
-            initial="visible"
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
+            className="fixed inset-0 bg-white dark:bg-black z-[200] flex items-center justify-center overflow-hidden"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 1.5, ease: [0.8, 0, 0.2, 1] } }}
         >
-            <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="flex flex-col items-center gap-4"
-            >
-                <AnimatedLogo />
-                <motion.h1 
-                    variants={itemVariants} 
-                    className="text-4xl font-bold text-on-surface dark:text-dark-on-surface"
-                >
-                    EZYPC
-                </motion.h1>
-            </motion.div>
+            <div className="flex flex-col items-center relative overflow-visible">
+                {/* Logo starts larger than header version and scales up subtly */}
+                <AnimatedLogo scale={1.3} />
+
+                <AnimatePresence>
+                    {showText && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 1.05, filter: "blur(40px)", y: 20 }}
+                            animate={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
+                            transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+                            className="flex flex-col items-center mt-[-10px] pointer-events-none"
+                        >
+                            {/* Larger, bold text with Host Grotesk */}
+                            <h1 
+                                className="text-8xl sm:text-[10rem] font-black tracking-tighter text-black dark:text-white uppercase leading-[0.8]"
+                                style={{ fontFamily: '"Host Grotesk", sans-serif' }}
+                            >
+                                EZYPC
+                            </h1>
+                            <p
+                                className="text-black/40 dark:text-white/40 tracking-[0.5em] text-[10px] font-black uppercase mt-6"
+                                style={{ fontFamily: '"Host Grotesk", sans-serif' }}
+                            >
+                                PREMIUM COMPUTING
+                            </p>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
         </motion.div>
     );
 };

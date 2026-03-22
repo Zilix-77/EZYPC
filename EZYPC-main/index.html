@@ -4,6 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>EZYPC - Calm PC Buying</title>
+    <script>
+      // Synchronously apply dark mode before React loads to prevent flash
+      (function() {
+        const theme = localStorage.getItem('theme') || 'dark';
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
     <script type="module" src="/index.tsx"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -12,51 +23,111 @@
         theme: {
           extend: {
             colors: {
-              // Light theme (default)
-              base: '#f0f2f5',
-              surface: '#ffffff',
-              'on-surface': '#121212',
-              'on-surface-secondary': '#6b7280',
-              primary: '#738ea1', // Slate blue for light theme
-              'primary-hover': '#627a8c',
+              // Minimal White and Black Theme
+              base: '#FFFFFF',
+              surface: '#F8F8F8',
+              'on-surface': '#000000',
+              'on-surface-secondary': '#666666',
+              primary: '#000000', 
+              'primary-hover': '#333333',
 
-              // Dark theme colors
-              'dark-base': '#1a1a1a',
-              'dark-surface': '#242424',
-              'dark-on-surface': '#f0f0f0',
-              'dark-on-surface-secondary': '#a8a8a8',
-              'dark-primary': '#c89b7b', // Earthy bronze for dark theme
-              'dark-primary-hover': '#b48a6b',
+              // Dark theme (Redefined for true premium black)
+              'dark-base': '#000000',
+              'dark-surface': '#0A0A0A',
+              'dark-on-surface': '#FFFFFF',
+              'dark-on-surface-secondary': '#A0A0A0',
+              'dark-primary': '#FFFFFF',
+              'dark-primary-hover': '#E0E0E0',
 
-              // Accent colors (shared)
-              accent: '#8daaa1',
-              success: '#22c55e',
-              'success-hover': '#16a34a',
+              accent: '#00F0FF', // Keeping a tiny bit of tech cyan as accent
             },
             fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-            },
-            keyframes: {
-              'fade-in': {
-                '0%': { opacity: '0', transform: 'translateY(10px)' },
-                '100%': { opacity: '1', transform: 'translateY(0)' },
-              },
-              'fade-in-down': {
-                '0%': { opacity: '0', transform: 'translateY(-10px)' },
-                '100%': { opacity: '1', transform: 'translateY(0)' },
-              },
-            },
-            animation: {
-              'fade-in': 'fade-in 0.5s ease-out forwards',
-              'fade-in-down': 'fade-in-down 0.5s ease-out forwards',
-            },
-            backdropBlur: {
-              'xl': '24px',
+              sans: ['"Host Grotesk"', 'Inter', 'sans-serif'],
             },
           },
         },
       }
     </script>
+    <style>
+      @font-face {
+        font-family: 'Host Grotesk';
+        src: url('/fonts/HostGroteskwght-BF65bb091d8052b.ttf') format('truetype');
+        font-weight: 100 900;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: 'Host Grotesk';
+        src: url('/fonts/HostGrotesk-Regular-BF65bb091d50206.otf') format('opentype');
+        font-weight: 400;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: 'Host Grotesk';
+        src: url('/fonts/HostGrotesk-Medium-BF65bb091d2b74a.otf') format('opentype');
+        font-weight: 500;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: 'Host Grotesk';
+        src: url('/fonts/HostGrotesk-Bold-BF65bb091c5ba6f.otf') format('opentype');
+        font-weight: 700;
+        font-style: normal;
+      }
+
+      body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+      }
+
+      /* Explicit dark mode text color fix */
+      .text-on-surface {
+        color: #000000;
+      }
+      .dark .text-on-surface {
+        color: #FFFFFF;
+      }
+
+      /* Noise Overlay */
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.03;
+        z-index: 9999;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.1);
+        border-radius: 10px;
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.1);
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(0,0,0,0.2);
+      }
+      .dark ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255,255,255,0.2);
+      }
+
+      /* Selection */
+      ::selection {
+        background: rgba(128, 128, 128, 0.2);
+      }
+    </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">

@@ -2,21 +2,22 @@ import { useState, useEffect, useCallback } from 'react';
 
 type Theme = 'light' | 'dark';
 
+// Initialize theme synchronously to prevent flash of wrong theme
+const getInitialTheme = (): Theme => {
+  if (typeof window === 'undefined') return 'dark';
+  
+  const storedTheme = localStorage.getItem('theme') as Theme | null;
+  if (storedTheme) return storedTheme;
+  
+  // Default to 'dark' for better visibility and modern aesthetic
+  return 'dark';
+};
+
 export const useTheme = () => {
-  const [theme, setTheme] = useState<Theme>('light'); // Default to light
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
 
   useEffect(() => {
-    // This effect runs once on mount to determine the initial theme.
-    const storedTheme = localStorage.getItem('theme') as Theme | null;
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    // Priority: 1. Stored theme, 2. OS preference, 3. Default (light)
-    const initialTheme = storedTheme || (prefersDark ? 'dark' : 'light');
-    setTheme(initialTheme);
-  }, []);
-
-  useEffect(() => {
-    // This effect runs whenever the theme state changes.
+    // Ensure the theme is applied immediately when component mounts
     const root = window.document.documentElement;
     if (theme === 'dark') {
       root.classList.add('dark');
@@ -25,6 +26,8 @@ export const useTheme = () => {
     }
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+
 
   const toggleTheme = useCallback(() => {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));

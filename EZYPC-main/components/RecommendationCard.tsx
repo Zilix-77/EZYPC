@@ -45,56 +45,58 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetails, stagg
       initial="hidden"
       whileInView="visible"
       custom={staggerIndex}
-      viewport={{ once: true, amount: 0.12, margin: '80px' }}
-      className="bg-surface dark:bg-dark-surface rounded-xl border border-on-surface/10 dark:border-dark-on-surface/10 hover:border-on-surface/20 dark:hover:border-dark-on-surface/20 transition-all duration-300 flex flex-col justify-between h-full overflow-hidden group hover:scale-[1.02] hover:shadow-xl shadow-black/5"
+      viewport={{ once: true, amount: 0.12 }}
+      onClick={onViewDetails}
+      className="bg-white dark:bg-[#0A0A0A] border border-black/10 dark:border-white/10 flex flex-col h-full cursor-pointer group transition-all duration-500 hover:border-black dark:hover:border-white hover:scale-95 origin-center"
     >
-      <div>
-        <div className="aspect-video w-full">
-           <LazyImage 
-            src={imageUrl} 
-            alt={title}
-           />
-        </div>
-        <div className="p-6">
-          <div className="flex justify-between items-start mb-3">
-            <span className="text-sm text-on-surface-secondary dark:text-dark-on-surface-secondary font-medium pt-1">{type}</span>
-            <div className="flex items-center flex-wrap justify-end gap-2">
-              {tag && (
-                <div className="bg-accent/20 text-accent text-xs font-bold inline-block py-1 px-2 rounded-full">
-                  {tag}
-                </div>
-              )}
-               {isBestMatch && (
-                <div className="bg-primary/20 text-primary dark:bg-dark-primary/20 dark:text-dark-primary text-xs font-bold inline-block py-1 px-2 rounded-full">
-                  Best Match
-                </div>
-              )}
-            </div>
-          </div>
-          <h3 className="text-xl font-bold text-on-surface dark:text-dark-on-surface mb-2 min-h-[56px]">{title}</h3>
-          <p className="text-sm text-on-surface-secondary dark:text-dark-on-surface-secondary mb-4 min-h-[80px]">{rationale}</p>
-        
-          <div className="space-y-2 mb-6">
-              {keySpecs.map((comp, index) => (
-                  <div key={index} className="flex justify-between text-sm">
-                      <p className="text-on-surface-secondary dark:text-dark-on-surface-secondary">{comp.name}</p>
-                      <p className="font-semibold text-on-surface dark:text-dark-on-surface text-right">{comp.spec}</p>
-                  </div>
-              ))}
-          </div>
-        </div>
-      </div>
-      
-      <div className="px-6 pb-6">
-        <p className="text-2xl font-bold text-primary dark:text-dark-primary text-right mb-4">{formattedPrice}</p>
-        <button
-          onClick={onViewDetails}
-          className="w-full block text-center bg-primary text-white font-semibold py-3 px-6 rounded-lg hover:bg-primary-hover dark:bg-dark-primary dark:hover:bg-dark-primary-hover transition-colors duration-200"
-        >
-          View Details
-        </button>
+      <div className="relative aspect-[16/10] overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-700">
+         <LazyImage 
+          src={imageUrl} 
+          alt={title}
+         />
+         {(tag || isBestMatch) && (
+             <div className="absolute top-4 left-4 flex flex-col gap-2">
+                 {isBestMatch && (
+                     <span className="bg-black dark:bg-white text-white dark:text-black text-[10px] font-black tracking-widest px-3 py-1 uppercase" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>
+                         BEST MATCH
+                     </span>
+                 )}
+                 {tag && (
+                     <span className="bg-white/90 dark:bg-black/90 text-black dark:text-white text-[10px] font-black tracking-widest px-3 py-1 border border-black/10 dark:border-white/10 uppercase" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>
+                         {tag}
+                     </span>
+                 )}
+             </div>
+         )}
       </div>
 
+      <div className="p-8 flex flex-col flex-grow">
+        <div className="flex justify-between items-center mb-6">
+            <span className="text-[10px] font-black tracking-[0.3em] text-black/40 dark:text-white/40 uppercase" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>
+                {type}
+            </span>
+            <span className="text-lg font-black tracking-tighter text-black dark:text-white" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>
+                {formattedPrice}
+            </span>
+        </div>
+
+        <h3 className="text-2xl font-black tracking-tighter text-black dark:text-white mb-4 uppercase leading-none" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>
+            {title}
+        </h3>
+        
+        <p className="text-xs text-black/60 dark:text-white/60 mb-8 line-clamp-2 leading-relaxed font-medium">
+            {rationale}
+        </p>
+
+        <div className="mt-auto space-y-3 pt-6 border-t border-black/5 dark:border-white/5">
+            {keySpecs.map((comp, index) => (
+                <div key={index} className="flex justify-between items-center text-[10px]">
+                    <span className="font-black tracking-widest text-black/30 dark:text-white/30 uppercase" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>{comp.name}</span>
+                    <span className="font-bold text-black dark:text-white uppercase tracking-wider">{comp.spec}</span>
+                </div>
+            ))}
+        </div>
+      </div>
     </motion.div>
   );
 };

@@ -73,7 +73,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product, onBack, 
       }
     } catch (error) {
       console.error("Failed to fetch similar products:", error);
-      setHasMoreSimilar(false); // Stop trying if there's an error
+      setHasMoreSimilar(false);
     } finally {
       if(isInitial) setIsLoadingSimilar(false);
     }
@@ -109,141 +109,141 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product, onBack, 
   }).format(estimatedPriceINR);
 
   return (
-    <div className="w-full max-w-5xl mx-auto">
+    <div className="w-full max-w-7xl mx-auto pb-32">
        <AnimatePresence>
             {isScrolled && (
                 <motion.button
                     onClick={onBack}
-                    className="fixed top-6 left-6 z-30 bg-surface/80 dark:bg-dark-surface/80 backdrop-blur-md border border-on-surface/20 dark:border-dark-on-surface/20 py-3 px-6 rounded-full shadow-lg flex items-center gap-2 text-on-surface dark:text-dark-on-surface font-semibold"
-                    initial={{ y: -100, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: -100, opacity: 0 }}
-                    transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                    className="fixed top-24 left-8 z-50 bg-white/90 dark:bg-black/90 backdrop-blur-md border border-black/10 dark:border-white/10 py-4 px-8 text-[10px] font-black tracking-widest uppercase text-black dark:text-white hover:scale-105 transition-transform"
+                    initial={{ x: -100, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: -100, opacity: 0 }}
+                    style={{ fontFamily: '"Host Grotesk", sans-serif' }}
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    Back to Store
+                    Return
                 </motion.button>
             )}
         </AnimatePresence>
-      <div className="mb-6">
-        <button onClick={onBack} className="flex items-center gap-2 text-on-surface-secondary dark:text-dark-on-surface-secondary hover:text-on-surface dark:hover:text-dark-on-surface transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-          </svg>
-          Back to Store
+
+      <div className="mb-12">
+        <button onClick={onBack} className="flex items-center gap-4 group">
+            <div className="w-8 h-[1px] bg-black/20 dark:bg-white/20 group-hover:w-12 group-hover:bg-black dark:group-hover:bg-white transition-all" />
+            <span className="text-[10px] font-black tracking-[0.3em] text-black/40 dark:text-white/40 group-hover:text-black dark:group-hover:text-white uppercase transition-colors" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>Back to Store</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-        <div>
-          <div className="rounded-xl overflow-hidden aspect-video">
-            <LazyImage src={imageUrl} alt={title} className="w-full h-full" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24">
+        <div className="lg:col-span-7">
+          <div className="overflow-hidden bg-white dark:bg-[#0A0A0A] border border-black/5 dark:border-white/5 grayscale hover:grayscale-0 transition-all duration-1000">
+            <LazyImage src={imageUrl} alt={title} className="w-full h-full object-cover aspect-[4/3]" />
           </div>
-          {reviews && reviews.length > 0 && (
-            <div className="mt-4 flex items-center gap-4">
-              <p className="text-4xl font-bold text-on-surface dark:text-dark-on-surface">{averageRating.toFixed(1)}</p>
-              <div>
-                <StarRating rating={averageRating} className="h-6 w-6" />
-                <p className="text-sm text-on-surface-secondary dark:text-dark-on-surface-secondary mt-1">{reviews.length} reviews</p>
-              </div>
-            </div>
-          )}
-        </div>
-        <div className="flex flex-col">
-          <span className="text-md text-on-surface-secondary dark:text-dark-on-surface-secondary font-medium mb-2">{type}</span>
-          <h1 className="text-3xl lg:text-4xl font-bold text-on-surface dark:text-dark-on-surface mb-3">{title}</h1>
-          <p className="text-on-surface-secondary dark:text-dark-on-surface-secondary mb-6 text-lg">{rationale}</p>
           
-          <div className="mt-auto pt-6">
-              <div className="flex-grow bg-surface dark:bg-dark-surface border border-on-surface/10 dark:border-dark-on-surface/10 rounded-xl p-4">
-                  <p className="text-sm text-on-surface-secondary dark:text-dark-on-surface-secondary mb-3">Starting from</p>
-                  <p className="text-3xl font-bold text-primary dark:text-dark-primary text-left mb-4">{formattedPrice}</p>
-                  <div className="space-y-3">
-                      {sortedPurchaseOptions.map((option, index) => (
-                          <a
-                              key={option.vendor}
-                              href={option.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={`w-full flex justify-between items-center text-center font-semibold py-3 px-4 rounded-lg transition-colors duration-200 text-base
-                                  ${index === 0 ? 'bg-success hover:bg-success-hover text-black' : 'bg-primary hover:bg-primary-hover dark:bg-dark-primary dark:hover:bg-dark-primary-hover text-white'}`
-                              }
-                          >
-                              <span>Buy on {option.vendor}</span>
-                              <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(option.price)}</span>
-                          </a>
-                      ))}
+          <div className="mt-24 space-y-24">
+              <section>
+                <span className="text-[10px] font-black tracking-[0.4em] text-black/40 dark:text-white/40 uppercase mb-8 block" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>Specifications</span>
+                <div className="grid grid-cols-1 gap-0 border-t border-black/10 dark:border-white/10">
+                    {components.map((comp, index) => (
+                      <div key={index} className="py-6 flex justify-between items-center border-b border-black/10 dark:border-white/10 group">
+                        <span className="text-[10px] font-black tracking-widest text-black/30 dark:text-white/30 uppercase" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>{comp.name}</span>
+                        <span className="text-sm font-bold text-black dark:text-white uppercase tracking-wider text-right">{comp.spec}</span>
+                      </div>
+                    ))}
+                </div>
+              </section>
+
+              <section>
+                 <span className="text-[10px] font-black tracking-[0.4em] text-black/40 dark:text-white/40 uppercase mb-8 block" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>Price Performance</span>
+                 <div className="p-8 border border-black/10 dark:border-white/10">
+                    <PriceHistoryChart basePrice={estimatedPriceINR} />
+                 </div>
+              </section>
+
+              <ReviewsSection reviews={reviews} />
+          </div>
+        </div>
+
+        <div className="lg:col-span-5 flex flex-col pt-0 lg:pt-12 sticky top-24 self-start">
+          <span className="text-[10px] font-black tracking-[0.3em] text-black/40 dark:text-white/40 uppercase mb-4" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>{type}</span>
+          <h1 className="text-5xl lg:text-7xl font-black text-on-surface dark:text-dark-on-surface mb-8 uppercase tracking-tighter leading-[0.9]" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>{title}</h1>
+          <p className="text-on-surface-secondary dark:text-dark-on-surface-secondary mb-12 text-lg leading-relaxed">{rationale}</p>
+          
+          <div className="mt-auto space-y-6">
+               <div className="p-10 border border-black/10 dark:border-white/10 bg-white dark:bg-[#0A0A0A]">
+                  <div className="flex justify-between items-end mb-8">
+                    <div>
+                        <span className="text-[10px] font-black tracking-widest text-black/40 dark:text-white/40 uppercase block mb-1" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>Starting at</span>
+                        <span className="text-4xl font-black text-black dark:text-white" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>{formattedPrice}</span>
+                    </div>
+                    {averageRating > 0 && (
+                        <div className="text-right">
+                            <span className="text-[10px] font-black tracking-widest text-black/40 dark:text-white/40 uppercase block mb-1" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>Rating</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xl font-black text-black dark:text-white" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>{averageRating.toFixed(1)}</span>
+                                <StarRating rating={averageRating} className="h-4 w-4" />
+                            </div>
+                        </div>
+                    )}
                   </div>
-              </div>
+
+                   <div className="space-y-3">
+                       {sortedPurchaseOptions.map((option, index) => (
+                           <a
+                               key={option.vendor}
+                               href={option.link}
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               className={`w-full flex justify-between items-center px-8 py-5 text-[10px] font-black tracking-widest uppercase transition-all duration-300
+                                   ${index === 0 
+                                     ? 'bg-green-500 dark:bg-green-600 text-white dark:text-white hover:scale-[1.02] hover:bg-green-600 dark:hover:bg-green-700' 
+                                     : 'border border-black/10 dark:border-white/10 text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white hover:border-black dark:hover:border-white'}`}
+                               style={{ fontFamily: '"Host Grotesk", sans-serif' }}
+                           >
+                               <span>Buy on {option.vendor}</span>
+                               <span className="opacity-60">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(option.price)}</span>
+                           </a>
+                       ))}
+                   </div>
+               </div>
+
+               {availableUsedPart && (
+                <div className="p-8 border border-accent/20 bg-accent/5 flex flex-col gap-6">
+                    <div>
+                        <span className="text-[10px] font-black tracking-widest text-accent uppercase block mb-2" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>Expert Tip</span>
+                        <p className="text-xs text-on-surface-secondary dark:text-dark-on-surface-secondary uppercase tracking-wider leading-relaxed">
+                            Save by choosing a pre-owned <span className="font-bold text-black dark:text-white">{availableUsedPart.component}</span> for <span className="font-bold text-black dark:text-white">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(availableUsedPart.price)}</span>.
+                        </p>
+                    </div>
+                    <button 
+                        onClick={() => onNavigate(Page.USED_PARTS)}
+                        className="w-full py-4 border border-accent text-accent text-[10px] font-black tracking-widest uppercase hover:bg-accent hover:text-black transition-all"
+                        style={{ fontFamily: '"Host Grotesk", sans-serif' }}>
+                        Browse Pre-Owned
+                    </button>
+                </div>
+              )}
           </div>
         </div>
       </div>
-      
-      {availableUsedPart && (
-        <div className="my-8 p-4 bg-accent/10 border-l-4 border-accent rounded-r-lg flex flex-col sm:flex-row items-center gap-4">
-            <div className="flex-shrink-0 text-accent">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-            </div>
-            <div className="flex-grow text-on-surface dark:text-dark-on-surface text-center sm:text-left">
-                <h4 className="font-bold">Also available as Pre-Owned!</h4>
-                <p className="text-sm text-on-surface-secondary dark:text-dark-on-surface-secondary">
-                    A similar component, the <span className="font-semibold">{availableUsedPart.component}</span>, is in our certified pre-owned section for just <span className="font-semibold">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(availableUsedPart.price)}</span>.
-                </p>
-            </div>
-            <button 
-                onClick={() => onNavigate(Page.USED_PARTS)}
-                className="bg-accent text-black font-semibold py-2 px-5 rounded-lg hover:bg-opacity-80 transition-colors duration-200 flex-shrink-0">
-                Check It Out
-            </button>
-        </div>
-      )}
 
-      <div className="my-12 border-t border-on-surface/10 dark:border-dark-on-surface/10"></div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-          <h2 className="text-2xl font-bold text-on-surface dark:text-dark-on-surface mb-4">Full Specifications</h2>
-          <div className="bg-surface dark:bg-dark-surface rounded-xl border border-on-surface/10 dark:border-dark-on-surface/10">
-            {components.map((comp, index) => (
-              <div key={index} className={`p-4 flex justify-between text-md ${index !== components.length - 1 ? 'border-b border-on-surface/10 dark:border-dark-on-surface/10' : ''}`}>
-                <p className="text-on-surface-secondary dark:text-dark-on-surface-secondary">{comp.name}</p>
-                <p className="font-semibold text-on-surface dark:text-dark-on-surface text-right">{comp.spec}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        <div className="bg-surface dark:bg-dark-surface rounded-xl border border-on-surface/10 dark:border-dark-on-surface/10 p-6">
-            <PriceHistoryChart basePrice={estimatedPriceINR} />
-        </div>
-      </div>
-
-      <div className="my-12 border-t border-on-surface/10 dark:border-dark-on-surface/10"></div>
-      
-      <ReviewsSection reviews={reviews} />
-
-      <div className="my-12 border-t border-on-surface/10 dark:border-dark-on-surface/10"></div>
-
-      <div>
-        <h2 className="text-2xl font-bold text-on-surface dark:text-dark-on-surface mb-6">Similar Products</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="mt-32 pt-32 border-t border-black/10 dark:border-white/10">
+        <span className="text-[10px] font-black tracking-[0.4em] text-black/40 dark:text-white/40 uppercase mb-12 block text-center" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>Similar Alternatives</span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {isLoadingSimilar && similarProducts.length === 0 ? (
                 <>
+                    <ProductCardSkeleton />
                     <ProductCardSkeleton />
                     <ProductCardSkeleton />
                 </>
             ) : (
                 similarProducts.map((p, index) => (
-                    <ProductCard key={p.title} product={p} onViewDetails={() => onViewDetails(p)} />
+                    <ProductCard key={p.title} product={p} onViewDetails={() => onViewDetails(p)} staggerIndex={index} />
                 ))
             )}
         </div>
-        <div ref={loaderRef} className="flex justify-center items-center p-8 h-20">
-            {hasMoreSimilar && !isLoadingSimilar && <LoadingSpinner />}
+        <div ref={loaderRef} className="flex justify-center items-center py-20 h-20">
+            {hasMoreSimilar && !isLoadingSimilar && (
+                <div className="w-8 h-8 border-2 border-black/10 dark:border-white/10 border-t-black dark:border-t-white rounded-full animate-spin" />
+            )}
         </div>
       </div>
     </div>

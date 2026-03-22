@@ -1,90 +1,112 @@
 import React from 'react';
-import { motion, Variants } from 'framer-motion';
+import { motion } from 'framer-motion';
 
-const AnimatedLogo: React.FC = () => {
-  const caseVariants: Variants = {
-    hidden: { pathLength: 0, opacity: 0 },
-    visible: {
-      pathLength: 1,
-      opacity: 1,
-      transition: {
-        duration: 1,
-        ease: 'easeInOut',
-      },
-    },
-  };
+interface AnimatedLogoProps {
+  scale?: number;
+  isOpen?: boolean;
+}
 
-  const fanVariants: Variants = {
-    hidden: { opacity: 0, scale: 0.5 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      transition: {
-        delay: 0.8,
-        duration: 0.5,
-      },
-    },
-  };
+// Cabinet inner dims: x=30–110, y=20–140 (80×120)
+// 2 fans of r=14, closer together for better visual balance
+const FANS = [
+  { cy: 50,  duration: 2.0, clockwise: true  },   // top fan — intake
+  { cy: 100, duration: 2.5, clockwise: false },   // bottom fan — exhaust (reverse)
+] as const;
 
+const FAN_R  = 16;               // fan radius (increased for visibility)
+const FAN_B  = 11;               // primary-blade half-length
+const FAN_DB = 10;               // diagonal-blade half-length
+
+const AnimatedLogo: React.FC<AnimatedLogoProps> = ({ scale = 1, isOpen = false }) => {
   return (
-    <div className="w-10 h-10 text-primary dark:text-dark-primary">
-      <motion.svg
-        viewBox="0 0 40 40"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        initial="hidden"
-        animate="visible"
-        className="w-full h-full"
+    <motion.div
+      className="relative flex items-center justify-center p-4 overflow-visible"
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{ scale, opacity: 1 }}
+      transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+      style={{ width: 140, height: 160 }}
+    >
+      {/* Subtle background glow */}
+      <div className="absolute inset-0 bg-black/5 dark:bg-white/5 rounded-full blur-[40px] opacity-40" />
+
+      <svg
+        viewBox="0 0 140 160"
+        className="w-full h-full text-black dark:text-white relative z-10 overflow-visible"
       >
-        {/* Case outline */}
-        <motion.path
-          d="M6 2 H 34 A 2 2 0 0 1 36 4 V 36 A 2 2 0 0 1 34 38 H 6 A 2 2 0 0 1 4 36 V 4 A 2 2 0 0 1 6 2 Z"
+        {/* ── Main Cabinet Chassis ── */}
+        <motion.rect
+          x="30" y="20" width="80" height="120"
+          fill="none"
           stroke="currentColor"
-          strokeWidth="1.5"
-          variants={caseVariants}
-        />
-        
-        {/* Glass panel line */}
-        <motion.path
-          d="M18 4 V 36"
-          stroke="currentColor"
-          strokeWidth="1"
-          strokeDasharray="2 2"
-          variants={caseVariants}
+          strokeWidth="2.5"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 1.5, ease: 'easeInOut' }}
         />
 
-        {/* Fans */}
-        <motion.g variants={fanVariants}>
-          {/* Top Fan */}
-          <g transform="translate(26, 12)">
-            <motion.g
-              animate={{ rotate: 360 }}
-              transition={{ delay: 1.2, duration: 2.5, repeat: Infinity, ease: 'linear' }}
-            >
-              <path d="M 0 -5 L 1.5 -1.5 L 0 0 Z" fill="currentColor" opacity="0.8" />
-              <path d="M 5 0 L 1.5 1.5 L 0 0 Z" fill="currentColor" opacity="0.8" />
-              <path d="M 0 5 L -1.5 1.5 L 0 0 Z" fill="currentColor" opacity="0.8" />
-              <path d="M -5 0 L -1.5 -1.5 L 0 0 Z" fill="currentColor" opacity="0.8" />
-            </motion.g>
-            <circle cx="0" cy="0" r="1.5" fill="black" />
-          </g>
+        {/* Glass Side Panel Indicator */}
+        <rect
+          x="35" y="25" width="70" height="110"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="0.5"
+          strokeOpacity="0.1"
+        />
 
-          {/* Bottom Fan */}
-          <g transform="translate(26, 28)">
+        {/* ── Two Fans ── */}
+        {FANS.map(({ cy, duration, clockwise }, i) => (
+          <g key={i} transform={`translate(70, ${cy})`}>
+            {/* Fan mounting ring */}
+            <circle
+              cx="0" cy="0" r={FAN_R}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeOpacity="0.35"
+            />
+
+            {/* Spinning blades - 4 blade design */}
             <motion.g
-              animate={{ rotate: 360 }}
-              transition={{ delay: 1.3, duration: 2.5, repeat: Infinity, ease: 'linear' }}
+              initial={{ rotate: 0 }}
+              animate={{ rotate: clockwise ? 360 : -360 }}
+              transition={{ repeat: Infinity, duration, ease: 'linear' }}
             >
-              <path d="M 0 -5 L 1.5 -1.5 L 0 0 Z" fill="currentColor" opacity="0.8" />
-              <path d="M 5 0 L 1.5 1.5 L 0 0 Z" fill="currentColor" opacity="0.8" />
-              <path d="M 0 5 L -1.5 1.5 L 0 0 Z" fill="currentColor" opacity="0.8" />
-              <path d="M -5 0 L -1.5 -1.5 L 0 0 Z" fill="currentColor" opacity="0.8" />
+              {/* Four main blade spokes radiating from center */}
+              <g>
+                {/* Top blade */}
+                <line x1="0" y1="0" x2="0" y2={-FAN_B} strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeOpacity="0.8" />
+                {/* Right blade */}
+                <line x1="0" y1="0" x2={FAN_B} y2="0" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeOpacity="0.8" />
+                {/* Bottom blade */}
+                <line x1="0" y1="0" x2="0" y2={FAN_B} strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeOpacity="0.8" />
+                {/* Left blade */}
+                <line x1="0" y1="0" x2={-FAN_B} y2="0" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeOpacity="0.8" />
+              </g>
             </motion.g>
-            <circle cx="0" cy="0" r="1.5" fill="black" />
+
+            {/* Fan hub */}
+            <circle cx="0" cy="0" r="3.5" fill="currentColor" />
           </g>
-        </motion.g>
-      </motion.svg>
-    </div>
+        ))}
+
+        {/* ── Front Panel Accent ── */}
+        <line
+          x1="110" y1="30" x2="110" y2="130"
+          stroke="currentColor"
+          strokeWidth="4"
+          strokeOpacity="0.05"
+        />
+
+        {/* ── Power LED (below bottom fan, above cabinet base) ── */}
+        <motion.circle
+          cx="70" cy="137"
+          r="1.5"
+          className="fill-black dark:fill-white"
+          animate={{ opacity: [0.3, 1, 0.3] }}
+          transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+        />
+      </svg>
+    </motion.div>
   );
 };
 

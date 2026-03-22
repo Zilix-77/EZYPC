@@ -7,6 +7,7 @@ import RecommendationWizard from './components/RecommendationWizard';
 import LoadingSpinner from './components/LoadingSpinner';
 import { AnimatePresence } from 'framer-motion';
 import { useTheme } from './hooks/useTheme';
+import SpotlightBackground from './components/SpotlightBackground';
 
 const INITIAL_PAGE_SIZE = 12;
 const NEXT_BATCH_SIZE = 50;
@@ -176,10 +177,11 @@ const App: React.FC = () => {
 
   return (
     <>
+      <SpotlightBackground />
       <AnimatePresence>
         {!isIntroComplete && <IntroAnimation />}
       </AnimatePresence>
-      <div className={`min-h-screen flex flex-col items-center p-4 sm:p-6 transition-opacity duration-500 ${isIntroComplete ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`min-h-screen flex flex-col items-center p-4 sm:p-6 transition-opacity duration-1000 ${isIntroComplete ? 'opacity-100' : 'opacity-0'}`}>
         <div className="w-full max-w-7xl mx-auto flex flex-col z-10">
           <Header onNavigate={handleNavigate} currentPage={page} onSearch={setSearchQuery} searchQuery={searchQuery} />
           <main className="flex-grow flex items-start justify-center mt-6">

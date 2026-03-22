@@ -20,74 +20,66 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage, searchQuery, o
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const navItems = [
-    { page: Page.STORE, label: 'Store' },
-    { page: Page.USED_PARTS, label: 'Used Parts' },
+    { page: Page.STORE, label: 'STORE' },
+    { page: Page.USED_PARTS, label: 'USED PARTS' },
   ];
 
-  useEffect(() => {
-    if (isSearchVisible) {
-        searchInputRef.current?.focus();
-    }
-  }, [isSearchVisible]);
-  
-  // If we are not on the store page, don't show the search bar
-  const canShowSearch = currentPage === Page.STORE;
-
-  const handleSearchToggle = () => {
-    if (!canShowSearch) {
-        onNavigate(Page.STORE);
-        setTimeout(() => setIsSearchVisible(true), 50);
-    } else {
-        setIsSearchVisible(!isSearchVisible);
-    }
-  };
-
-
   return (
-    <header className="w-full py-4 px-2 flex justify-between items-center border-b border-on-surface/10 dark:border-dark-surface relative">
-      <div className="flex items-center gap-3 cursor-pointer" onClick={() => onNavigate(Page.STORE)}>
-        <AnimatedLogo />
-        <h1 className="text-2xl font-bold text-on-surface dark:text-dark-on-surface">EZYPC</h1>
+    <header className="w-full py-8 flex justify-between items-center relative z-50">
+      <div className="flex items-center gap-4 cursor-pointer group" onClick={() => onNavigate(Page.STORE)}>
+        <div className="h-10 w-auto aspect-[140/160] flex items-center justify-center">
+            <AnimatedLogo scale={0.4} />
+        </div>
+        <div className="overflow-hidden">
+            <h1 className="text-2xl font-black tracking-tighter text-on-surface dark:text-dark-on-surface uppercase" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>
+                EZYPC
+            </h1>
+        </div>
       </div>
-      <div className="flex items-center gap-2 sm:gap-4">
-        <AnimatePresence>
-            {isSearchVisible && canShowSearch && (
-                <motion.div
-                    initial={{ width: 0, opacity: 0 }}
-                    animate={{ width: 'auto', opacity: 1 }}
-                    exit={{ width: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="overflow-hidden"
-                >
-                    <input
-                        ref={searchInputRef}
-                        type="text"
-                        placeholder="Search for products..."
-                        value={searchQuery}
-                        onChange={(e) => onSearch(e.target.value)}
-                        onBlur={() => { if(!searchQuery) setIsSearchVisible(false) }}
-                        className="w-40 sm:w-56 bg-surface dark:bg-dark-surface border border-on-surface/20 dark:border-dark-on-surface/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-dark-primary"
-                    />
-                </motion.div>
-            )}
-        </AnimatePresence>
-        
-        <nav className="flex items-center gap-2 sm:gap-6">
+
+      <div className="hidden md:flex items-center gap-12">
+        <nav className="flex items-center gap-8">
           {navItems.map(item => (
             <button 
               key={item.label}
               onClick={() => onNavigate(item.page)}
-              className={`text-md font-medium transition-colors ${currentPage === item.page ? 'text-primary dark:text-dark-primary' : 'text-on-surface-secondary dark:text-dark-on-surface-secondary hover:text-primary dark:hover:text-dark-primary'}`}
+              className={`text-xs font-bold tracking-[0.2em] transition-all duration-300 uppercase ${currentPage === item.page ? 'text-on-surface dark:text-dark-on-surface' : 'text-on-surface-secondary dark:text-dark-on-surface-secondary hover:text-on-surface dark:hover:text-dark-on-surface'}`}
+              style={{ fontFamily: '"Host Grotesk", sans-serif' }}
             >
               {item.label}
+              {currentPage === item.page && (
+                  <motion.div layoutId="nav-underline" className="h-0.5 bg-on-surface dark:bg-dark-on-surface mt-1" />
+              )}
             </button>
           ))}
         </nav>
+      </div>
 
-        <button onClick={handleSearchToggle} className="p-2 rounded-full hover:bg-on-surface/5 dark:hover:bg-dark-on-surface/5 text-on-surface-secondary dark:text-dark-on-surface-secondary">
-            <SearchIcon className="w-5 h-5" />
-        </button>
-        
+      <div className="flex items-center gap-4">
+        <div className="relative flex items-center">
+            <AnimatePresence>
+                {(isSearchVisible || searchQuery) && (
+                    <motion.input
+                        ref={searchInputRef}
+                        initial={{ width: 0, opacity: 0 }}
+                        animate={{ width: 200, opacity: 1 }}
+                        exit={{ width: 0, opacity: 0 }}
+                        type="text"
+                        placeholder="SEARCH..."
+                        value={searchQuery}
+                        onChange={(e) => onSearch(e.target.value)}
+                        className="bg-transparent border-b border-on-surface/20 dark:border-dark-on-surface/20 py-1 text-xs tracking-widest focus:outline-none focus:border-on-surface dark:focus:border-dark-on-surface uppercase"
+                        style={{ fontFamily: '"Host Grotesk", sans-serif' }}
+                    />
+                )}
+            </AnimatePresence>
+            <button 
+                onClick={() => setIsSearchVisible(!isSearchVisible)} 
+                className="p-2 text-on-surface dark:text-dark-on-surface hover:scale-110 transition-transform"
+            >
+                <SearchIcon className="w-5 h-5 stroke-[1.5]" />
+            </button>
+        </div>
         <ThemeToggle />
       </div>
     </header>
