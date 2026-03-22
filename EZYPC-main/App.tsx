@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
-import { Page, Product } from './types';
+import { Page, Product, User } from './types';
 import Header from './components/Header';
 import { getProductsPage } from './services/aiService';
 import IntroAnimation from './components/IntroAnimation';
@@ -8,14 +8,18 @@ import LoadingSpinner from './components/LoadingSpinner';
 import { AnimatePresence } from 'framer-motion';
 import { useTheme } from './hooks/useTheme';
 import SpotlightBackground from './components/SpotlightBackground';
+import ClickSpark from './components/ClickSpark';
 
-const INITIAL_PAGE_SIZE = 12;
-const NEXT_BATCH_SIZE = 50;
+const INITIAL_PAGE_SIZE = 36;
+const NEXT_BATCH_SIZE = 100;
 
 // Performance: Lazy load page components
 const StorePage = lazy(() => import('./components/StorePage'));
 const UsedPartsPage = lazy(() => import('./components/UsedPartsPage'));
 const ProductDetailPage = lazy(() => import('./components/ProductDetailPage'));
+const CreatorPage = lazy(() => import('./components/CreatorPage'));
+const SellProductPage = lazy(() => import('./components/SellProductView'));
+const SignInPage = lazy(() => import('./components/SignInPage'));
 
 const App: React.FC = () => {
   useTheme();
@@ -29,6 +33,8 @@ const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  
   const hasFetchedRef = useRef(false);
   const hasFetchedBackgroundRef = useRef(false);
 
@@ -37,56 +43,32 @@ const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    if (isIntroComplete) {
-      import('./components/UsedPartsPage');
-      import('./components/ProductDetailPage');
-    }
-  }, [isIntroComplete]);
-
   const fetchProducts = useCallback(async (pageOffset: number, limit: number, append: boolean) => {
-    if (append) {
-      setError(null);
-    } else {
-      setIsLoading(true);
-      setError(null);
-    }
+    if (append) setError(null);
+    else { setIsLoading(true); setError(null); }
     try {
       const result = await getProductsPage(pageOffset, limit);
-      if (!result) {
-        if (!append) setError('Could not load products. Please try again later.');
-        return;
-      }
+      if (!result) return;
       const fetched = result.recommendations ?? [];
       setHasMore(result.hasMore ?? false);
       setOffset(pageOffset + fetched.length);
-
       if (append) {
         setProducts((prev) => {
           const byKey = (p: Product) => p.id ?? p.title;
           const existingKeys = new Set(prev.map(byKey));
           const unique = fetched.filter((p) => !existingKeys.has(byKey(p)));
-          const next = [...prev, ...unique];
-          console.log('[App] Total loaded products:', next.length);
-          return next;
+          return [...prev, ...unique];
         });
-      } else {
-        setProducts(fetched);
-        console.log('[App] Initial load. Total loaded products:', fetched.length);
-      }
+      } else setProducts(fetched);
     } catch (e) {
-      console.error(e);
-      if (!append) {
-        setError('An error occurred while fetching products. Please try again.');
-      }
+      if (!append) setError('An error occurred while fetching products.');
     } finally {
       if (!append) setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (!isIntroComplete) return;
-    if (hasFetchedRef.current) return;
+    if (!isIntroComplete || hasFetchedRef.current) return;
     hasFetchedRef.current = true;
     fetchProducts(0, INITIAL_PAGE_SIZE, false);
   }, [isIntroComplete, fetchProducts]);
@@ -98,40 +80,11 @@ const App: React.FC = () => {
     fetchProducts(INITIAL_PAGE_SIZE, NEXT_BATCH_SIZE, true);
   }, [isIntroComplete, isLoading, products.length, hasMore, fetchProducts]);
 
-  const loadMoreProducts = useCallback(() => {
-    if (!hasMore || isLoading) return;
-    fetchProducts(offset, NEXT_BATCH_SIZE, true);
-  }, [hasMore, isLoading, offset, fetchProducts]);
-
-  const fetchInitialProducts = useCallback(() => {
-    hasFetchedRef.current = false;
-    hasFetchedBackgroundRef.current = false;
-    setOffset(0);
-    setHasMore(true);
-    fetchProducts(0, INITIAL_PAGE_SIZE, false);
-  }, [fetchProducts]);
-
   const handleNavigate = (newPage: Page) => {
-    if (newPage === Page.STORE) {
-        setSelectedProduct(null);
-    }
-    // Clear search when navigating away from the store
-    if (page === Page.STORE && newPage !== Page.STORE) {
-        setSearchQuery('');
-    }
+    if (newPage === Page.STORE) setSelectedProduct(null);
+    if (page === Page.STORE && newPage !== Page.STORE) setSearchQuery('');
     setPage(newPage);
     window.scrollTo(0,0);
-  };
-
-  const handleWizardComplete = (recommendedProducts: Product[]) => {
-    const recommendedIds = new Set(recommendedProducts.map(p => p.title));
-    const taggedProducts: Product[] = recommendedProducts.map(p => ({ ...p, tag: 'Recommended for You' }));
-    
-    const otherProducts = (products ?? []).filter(p => !recommendedIds.has(p.title));
-
-    setProducts([...taggedProducts, ...otherProducts]);
-    setIsWizardOpen(false);
-    setPage(Page.STORE);
   };
 
   const handleViewDetails = (product: Product) => {
@@ -145,58 +98,71 @@ const App: React.FC = () => {
     setPage(Page.STORE);
   };
 
-  const renderContent = () => {
-    if (error && products.length === 0) {
-       return (
-           <div className="flex flex-col items-center justify-center text-center p-8">
-            <h2 className="text-2xl font-semibold text-red-400">Something went wrong</h2>
-            <p className="text-on-surface-secondary dark:text-dark-on-surface-secondary mt-2 max-w-md">{error}</p>
-            <button
-              onClick={fetchInitialProducts}
-              className="mt-8 bg-primary text-white font-semibold py-2 px-6 rounded-lg hover:bg-primary-hover dark:bg-dark-primary dark:hover:bg-dark-primary-hover transition-colors duration-200"
-            >
-              Try Again
-            </button>
-          </div>
-        );
+  const handleSignIn = (user: User) => {
+    setCurrentUser(user);
+    setPage(user.role === 'ADMIN' ? Page.ADMIN_DASHBOARD : Page.STORE);
+    window.scrollTo(0, 0);
+  };
+
+  const handleSignOut = () => {
+    setCurrentUser(null);
+    setPage(Page.STORE);
+  };
+
+  // Tracking search for logged in users
+  useEffect(() => {
+    if (currentUser && searchQuery.length > 3) {
+        const timer = setTimeout(() => {
+            setCurrentUser(prev => prev ? ({
+                ...prev,
+                lastSearches: [...new Set([searchQuery, ...prev.lastSearches])].slice(0, 5)
+            }) : null);
+        }, 1000);
+        return () => clearTimeout(timer);
     }
+  }, [searchQuery, currentUser]);
 
+  const renderContent = () => {
     const showSkeleton = isLoading && products.length === 0;
-
     switch (page) {
       case Page.STORE:
         return <StorePage products={products} onStartWizard={() => setIsWizardOpen(true)} onViewDetails={handleViewDetails} isLoading={showSkeleton} searchQuery={searchQuery} onSearchChange={setSearchQuery} />;
       case Page.USED_PARTS:
-        return <UsedPartsPage />;
+        return <UsedPartsPage onNavigate={handleNavigate} isLoggedIn={!!currentUser} isAdmin={currentUser?.role === 'ADMIN'} />;
       case Page.DETAIL:
-        return selectedProduct ? <ProductDetailPage product={selectedProduct} onBack={handleBackToStore} onViewDetails={handleViewDetails} onNavigate={handleNavigate} /> : <StorePage products={products} onStartWizard={() => setIsWizardOpen(true)} onViewDetails={handleViewDetails} isLoading={showSkeleton} searchQuery={searchQuery} onSearchChange={setSearchQuery} />;
+        return selectedProduct ? <ProductDetailPage product={selectedProduct} products={products} onBack={handleBackToStore} onViewDetails={handleViewDetails} onNavigate={handleNavigate} /> : <StorePage products={products} onStartWizard={() => setIsWizardOpen(true)} onViewDetails={handleViewDetails} isLoading={showSkeleton} searchQuery={searchQuery} onSearchChange={setSearchQuery} />;
+      case Page.CREATOR:
+        return <CreatorPage />;
+      case Page.SELL:
+        return <SellProductPage onBack={handleBackToStore} />;
+      case Page.SIGN_IN:
+      case Page.SIGN_UP:
+        return <SignInPage onBack={handleBackToStore} onSignIn={handleSignIn} mode={page === Page.SIGN_UP ? 'signup' : 'signin'} onToggleMode={(m) => setPage(m === 'signup' ? Page.SIGN_UP : Page.SIGN_IN)} />;
+      case Page.ADMIN_DASHBOARD:
+        return <div className="p-20 text-center uppercase font-black text-4xl">Admin Dashboard (Coming Soon)</div>;
       default:
         return <StorePage products={products} onStartWizard={() => setIsWizardOpen(true)} onViewDetails={handleViewDetails} isLoading={showSkeleton} searchQuery={searchQuery} onSearchChange={setSearchQuery} />;
     }
   };
 
+  const { theme } = useTheme();
+
   return (
-    <>
+    <ClickSpark sparkColor={theme === 'dark' ? '#fff' : '#000'} sparkCount={6} sparkRadius={10} duration={400}>
       <SpotlightBackground />
-      <AnimatePresence>
-        {!isIntroComplete && <IntroAnimation />}
-      </AnimatePresence>
+      <AnimatePresence>{!isIntroComplete && <IntroAnimation />}</AnimatePresence>
       <div className={`min-h-screen flex flex-col items-center p-4 sm:p-6 transition-opacity duration-1000 ${isIntroComplete ? 'opacity-100' : 'opacity-0'}`}>
         <div className="w-full max-w-7xl mx-auto flex flex-col z-10">
-          <Header onNavigate={handleNavigate} currentPage={page} onSearch={setSearchQuery} searchQuery={searchQuery} />
+          <Header onNavigate={handleNavigate} currentPage={page} onSearch={setSearchQuery} searchQuery={searchQuery} user={currentUser} onSignOut={handleSignOut} />
           <main className="flex-grow flex items-start justify-center mt-6">
             <Suspense fallback={<div className="flex-grow flex items-center justify-center h-[50vh]"><LoadingSpinner /></div>}>
               {renderContent()}
             </Suspense>
           </main>
         </div>
-        <RecommendationWizard 
-          isOpen={isWizardOpen}
-          onClose={() => setIsWizardOpen(false)}
-          onComplete={handleWizardComplete}
-        />
+        <RecommendationWizard isOpen={isWizardOpen} onClose={() => setIsWizardOpen(false)} onComplete={(rp) => { setProducts(rp); setIsWizardOpen(false); setPage(Page.STORE); }} />
       </div>
-    </>
+    </ClickSpark>
   );
 };
 

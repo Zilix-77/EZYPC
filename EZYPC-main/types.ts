@@ -1,8 +1,19 @@
-
 export enum Page {
   STORE,
   USED_PARTS,
   DETAIL,
+  CREATOR,
+  SELL,
+  SIGN_IN,
+  SIGN_UP,
+  ADMIN_DASHBOARD,
+}
+
+export interface User {
+  id: string;
+  email: string;
+  role: 'USER' | 'ADMIN';
+  lastSearches: string[];
 }
 
 export enum UseCase {

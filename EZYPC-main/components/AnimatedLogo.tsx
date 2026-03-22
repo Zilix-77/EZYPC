@@ -20,11 +20,11 @@ const FAN_DB = 10;               // diagonal-blade half-length
 const AnimatedLogo: React.FC<AnimatedLogoProps> = ({ scale = 1, isOpen = false }) => {
   return (
     <motion.div
-      className="relative flex items-center justify-center p-4 overflow-visible"
+      className="relative flex items-center justify-center overflow-visible"
       initial={{ scale: 0.8, opacity: 0 }}
       animate={{ scale, opacity: 1 }}
       transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-      style={{ width: 140, height: 160 }}
+      style={{ width: 140 * scale, height: 160 * scale }}
     >
       {/* Subtle background glow */}
       <div className="absolute inset-0 bg-black/5 dark:bg-white/5 rounded-full blur-[40px] opacity-40" />

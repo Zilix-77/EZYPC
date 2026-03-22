@@ -6,11 +6,11 @@ interface OrbitElementsProps {
 }
 
 const OrbitElements: React.FC<OrbitElementsProps> = ({ images }) => {
-  // Exact path from user snippet: M 150 500 A 350 120 0 1 0 850 500 A 350 120 0 1 0 150 500
-  const path = "M 150 500 A 350 120 0 1 0 850 500 A 350 120 0 1 0 150 500";
+  // Ultra tight orbit radius: A 180 40
+  const path = "M 150 500 A 180 40 0 1 0 850 500 A 180 40 0 1 0 150 500";
 
   return (
-    <div className="relative w-full h-[600px] flex items-center justify-center" style={{ transform: 'rotate(0deg)', transformOrigin: 'top center' }}>
+    <div className="relative w-full h-[300px] flex items-center justify-center">
         {images.map((src, index) => {
             const distance = (index / images.length) * 100;
             return (
@@ -18,8 +18,8 @@ const OrbitElements: React.FC<OrbitElementsProps> = ({ images }) => {
                     key={index}
                     className="absolute will-change-transform select-none"
                     style={{
-                        width: '80px',
-                        height: '80px',
+                        width: '60px',
+                        height: '60px',
                         offsetPath: `path("${path}")`,
                         offsetRotate: '0deg',
                         offsetAnchor: 'center center',
@@ -28,7 +28,7 @@ const OrbitElements: React.FC<OrbitElementsProps> = ({ images }) => {
                         offsetDistance: [`${distance}%`, `${distance + 100}%`]
                     }}
                     transition={{
-                        duration: 30,
+                        duration: 35,
                         repeat: Infinity,
                         ease: "linear"
                     }}
@@ -37,7 +37,7 @@ const OrbitElements: React.FC<OrbitElementsProps> = ({ images }) => {
                         <img 
                             alt={`Featured component ${index + 1}`} 
                             src={src} 
-                            className="w-full h-full object-contain grayscale hover:grayscale-0 transition-all duration-500"
+                            className="w-full h-full object-contain transition-all duration-500 opacity-20 group-hover:opacity-100 dark:invert grayscale"
                             draggable="false"
                         />
                     </div>

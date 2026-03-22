@@ -7,6 +7,13 @@ const IntroAnimation: React.FC = () => {
 
     useEffect(() => {
         // Sequenced timing for premium feel
+        const playSfx = () => {
+             const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-sci-fi-low-sweep-reveal-1100.mp3');
+             audio.volume = 0.5;
+             audio.play().catch(e => console.log("Audio play blocked by browser."));
+        };
+
+        playSfx();
         const textTimer = setTimeout(() => setShowText(true), 1200);
         return () => clearTimeout(textTimer);
     }, []);
@@ -27,7 +34,7 @@ const IntroAnimation: React.FC = () => {
                             initial={{ opacity: 0, scale: 1.05, filter: "blur(40px)", y: 20 }}
                             animate={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
                             transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-                            className="flex flex-col items-center mt-[-10px] pointer-events-none"
+                            className="flex flex-col items-center mt-12 pointer-events-none"
                         >
                             {/* Larger, bold text with Host Grotesk */}
                             <h1 

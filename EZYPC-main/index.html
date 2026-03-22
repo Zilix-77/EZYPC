@@ -98,17 +98,12 @@
       .text-on-surface-secondary { color: #666666; }
       .dark .text-on-surface-secondary { color: #A0A0A0 !important; }
 
-      /* Force all headings to stay white in dark mode if they have specific black classes */
-      .dark h1, .dark h2, .dark h3, .dark h4, .dark p, .dark span, .dark div {
+      /* Extreme Dark Mode legible text override (Excludes buttons) */
+      .dark h1, .dark h2, .dark h3, .dark h4, .dark p, .dark span, .dark div:not([class*="bg-"]) {
         --tw-text-opacity: 1;
       }
 
-      /* Extreme Dark Mode legible text override */
-      .dark .text-black, 
-      .dark .text-on-surface, 
-      .dark .text-on-surface-secondary,
-      .dark [class*="text-black"],
-      .dark [class*="text-on-surface"] {
+      .dark .text-on-surface:not(button):not([class*="bg-white"]) {
         color: #FFFFFF !important;
       }
 
@@ -116,8 +111,33 @@
         color: rgba(255,255,255,0.6) !important;
       }
 
+      /* Make sure buttons keep their intended text-color */
+      .dark button.text-black, .dark button.dark\:text-black {
+        color: #000000 !important;
+      }
+
       .dark .group-hover\:text-black:hover {
         color: #000000 !important;
+      }
+
+      /* Global No-Select to feel like an app */
+      body {
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        overflow-x: hidden;
+      }
+
+      /* Re-enable for interactive/readable elements */
+      button, input, textarea, [contenteditable="true"] {
+        user-select: auto;
+        -webkit-user-select: auto;
+      }
+      
+      h1, h2, h3, .selectable-text {
+        user-select: text;
+        -webkit-user-select: text;
       }
 
       /* Noise Overlay */

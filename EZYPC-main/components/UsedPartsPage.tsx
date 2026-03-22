@@ -1,8 +1,14 @@
 import React from 'react';
 import { usedPartsData } from '../data/usedPartsData';
-import { UsedPart } from '../types';
+import { UsedPart, Page } from '../types';
 import { motion, Variants } from 'framer-motion';
 import LazyImage from './LazyImage';
+
+interface UsedPartsPageProps {
+    onNavigate: (page: Page) => void;
+    isLoggedIn: boolean;
+    isAdmin?: boolean;
+}
 
 const gradeMapping = {
     A: { label: 'Grade A', description: 'Mint', color: 'border-black/10 dark:border-white/10 text-black/40 dark:text-white/40' },
@@ -23,7 +29,7 @@ const cardVariants: Variants = {
 };
 
 const UsedPartCard: React.FC<{ part: UsedPart }> = ({ part }) => {
-    const gradeInfo = gradeMapping[part.grade];
+    const gradeInfo = gradeMapping[part.grade as keyof typeof gradeMapping];
     const formattedPrice = new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency: 'INR',
@@ -38,8 +44,8 @@ const UsedPartCard: React.FC<{ part: UsedPart }> = ({ part }) => {
           viewport={{ once: true, amount: 0.2 }}
           className="group flex flex-col h-full border border-black/5 dark:border-white/5 bg-white dark:bg-[#0A0A0A] hover:border-black dark:hover:border-white transition-all duration-500 overflow-hidden"
         >
-            <div className="aspect-[4/3] w-full overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-1000">
-                <LazyImage src={part.imageUrl} alt={part.component} className="w-full h-full object-cover scale-105 group-hover:scale-110 transition-transform duration-1000" />
+            <div className="aspect-[4/3] w-full overflow-hidden transition-all duration-1000">
+                <LazyImage src={part.imageUrl} alt={part.component} className="w-full h-full object-cover scale-100 group-hover:scale-110 transition-transform duration-1000" />
             </div>
             <div className="p-8 flex flex-col flex-grow">
                 <div className="flex justify-between items-center mb-6">
@@ -59,16 +65,50 @@ const UsedPartCard: React.FC<{ part: UsedPart }> = ({ part }) => {
     );
 }
 
+const UsedPartsPage: React.FC<UsedPartsPageProps> = ({ onNavigate, isLoggedIn, isAdmin }) => {
+  const handleSellClick = () => {
+    if (!isLoggedIn) {
+      onNavigate(Page.SIGN_IN);
+    } else {
+      onNavigate(Page.SELL);
+    }
+  };
 
-const UsedPartsPage: React.FC = () => {
   return (
     <div className="w-full max-w-7xl mx-auto pb-32">
-        <div className="text-center mb-24">
-            <span className="text-[10px] font-black tracking-[0.4em] text-black/40 dark:text-white/40 uppercase mb-4 block" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>Pre-Owned Selection</span>
-            <h1 className="text-6xl sm:text-8xl font-black text-on-surface dark:text-dark-on-surface uppercase tracking-tighter leading-none mb-8" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>Certified <br />Performance</h1>
-            <p className="max-w-xl mx-auto text-sm uppercase tracking-[0.2em] text-black/40 dark:text-white/40 font-bold leading-relaxed" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>
-                Tested and certified components. High performance computing at a reduced carbon footprint.
-            </p>
+        <div className="flex flex-col items-center justify-center pt-8 mb-24 relative overflow-visible">
+            {/* Action Bar */}
+            <div className="absolute top-0 right-0 flex items-center gap-6">
+                 {!isLoggedIn ? (
+                    <button 
+                        onClick={() => onNavigate(Page.SIGN_IN)}
+                        className="text-[10px] font-black tracking-widest uppercase opacity-40 hover:opacity-100 transition-opacity"
+                    >
+                        Sign In
+                    </button>
+                 ) : (
+                    <span className="text-[10px] font-black tracking-widest uppercase text-green-500">Authenticated</span>
+                 )}
+                 {isAdmin && (
+                    <button className="px-6 py-3 border border-orange-500 text-orange-500 text-[10px] font-black tracking-widest uppercase hover:bg-orange-500 hover:text-white transition-all">
+                        Admin Upload
+                    </button>
+                 )}
+                 <button 
+                    onClick={handleSellClick}
+                    className="px-6 py-3 bg-black dark:bg-white text-white dark:text-black text-[10px] font-black tracking-widest uppercase hover:scale-105 transition-transform"
+                 >
+                    Sell my Product
+                 </button>
+            </div>
+
+            <div className="text-center mt-24">
+                <span className="text-[10px] font-black tracking-[0.4em] text-black/40 dark:text-white/40 uppercase mb-4 block" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>Pre-Owned Selection</span>
+                <h1 className="text-6xl sm:text-8xl font-black text-on-surface dark:text-dark-on-surface uppercase tracking-tighter leading-[0.9] mb-8" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>Certified <br />Performance</h1>
+                <p className="max-w-xl mx-auto text-sm uppercase tracking-[0.2em] text-black/40 dark:text-white/40 font-bold leading-relaxed" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>
+                    Tested and certified components. High performance computing at a reduced carbon footprint.
+                </p>
+            </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -78,11 +118,15 @@ const UsedPartsPage: React.FC = () => {
         </div>
 
         <div className="mt-48 text-center p-20 border border-black/10 dark:border-white/10 relative overflow-hidden group">
-             <div className="absolute inset-0 bg-black dark:bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-700" />
+             <div className="absolute inset-0 bg-black dark:bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-700 pointer-events-none" />
              <div className="relative z-10">
                 <h2 className="text-4xl font-black text-on-surface dark:text-dark-on-surface uppercase tracking-tighter mb-4 group-hover:text-white dark:group-hover:text-black transition-colors" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>Have Parts to Sell?</h2>
                 <p className="text-xs font-bold uppercase tracking-widest text-black/40 dark:text-white/40 group-hover:text-white/60 dark:group-hover:text-black/60 transition-colors mb-12" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>Join our trade-in program for a direct quote.</p>
-                <button className="px-12 py-5 border border-black dark:border-white text-on-surface dark:text-dark-on-surface uppercase text-[10px] font-black tracking-widest group-hover:bg-white dark:group-hover:bg-black group-hover:text-black dark:group-hover:text-white group-hover:border-transparent transition-all duration-500" style={{ fontFamily: '"Host Grotesk", sans-serif' }}>
+                <button 
+                  onClick={handleSellClick}
+                  className="px-12 py-5 border border-black dark:border-white text-on-surface dark:text-dark-on-surface uppercase text-[10px] font-black tracking-widest group-hover:bg-white dark:group-hover:bg-black group-hover:text-black dark:group-hover:text-white group-hover:border-transparent transition-all duration-500" 
+                  style={{ fontFamily: '"Host Grotesk", sans-serif' }}
+                >
                     Learn About Trade-Ins
                 </button>
              </div>
