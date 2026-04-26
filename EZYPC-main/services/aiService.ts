@@ -47,7 +47,7 @@ function mapRowToProduct(
     components,
     purchaseOptions,
     reviews: [],
-    imageUrl: row.image_url || `https://picsum.photos/seed/${row.id}/600/400`,
+    imageUrl: row.image_url || '',
   };
 }
 
